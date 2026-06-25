@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VocalAI — AI-Powered Audio Tuner</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script>
+tailwind.config={theme:{extend:{colors:{primary:'#00D2C4',secondary:'#6C5CE7',accent:'#FFBE76',bgdark:'#0F172A',carddark:'#1E293B',textsec:'#94A3B8'},fontFamily:{poppins:['Poppins','sans-serif']}}}}
+</script>
+<style>
+:root{--primary:#00D2C4;--secondary:#6C5CE7;--accent:#FFBE76;--bg:#0F172A;--card:#1E293B;--textsec:#94A3B8}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Poppins',sans-serif;background:var(--bg);color:#fff;overflow-x:hidden}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--primary);border-radius:3px}
+
+.page{display:none;min-height:100vh;padding-top:72px}
+.page.active{display:block;animation:fi .35s ease}
+@keyframes fi{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+.nav-mobile{position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(15,23,42,.95);backdrop-filter:blur(20px);border-top:1px solid rgba(0,210,196,.12);padding:6px 0 env(safe-area-inset-bottom,6px)}
+.nav-mobile .ni{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:var(--textsec);transition:.25s;padding:4px 0;cursor:pointer;position:relative}
+.nav-mobile .ni.active{color:var(--primary)}
+.nav-mobile .ni.active::before{content:'';position:absolute;top:-7px;left:50%;transform:translateX(-50%);width:22px;height:3px;background:var(--primary);border-radius:0 0 3px 3px}
+.nav-mobile .ni i{font-size:17px}
+
+.nav-desktop{display:none}
+@media(min-width:768px){.nav-mobile{display:none!important}.nav-desktop{display:flex}.page{padding-top:80px}}
+
+.sc{background:var(--card);border:1px solid rgba(148,163,184,.07);border-radius:16px;padding:20px;transition:.3s}
+.sc:hover{border-color:rgba(0,210,196,.2)}
+.ch{transition:transform .3s,box-shadow .3s}
+.ch:hover{transform:translateY(-4px);box-shadow:0 12px 36px rgba(0,210,196,.1)}
+
+.gt{background:linear-gradient(135deg,var(--primary),var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+.blob{position:absolute;border-radius:50%;filter:blur(100px);opacity:.12;pointer-events:none;z-index:0}
+
+.t-ring{width:220px;height:220px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:.4s}
+.t-ring-in{width:190px;height:190px;border-radius:50%;background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center}
+@media(max-width:360px){.t-ring{width:180px;height:180px}.t-ring-in{width:155px;height:155px}}
+
+.wb{width:4px;border-radius:2px;background:var(--primary);animation:wa 1.2s ease-in-out infinite}
+@keyframes wa{0%,100%{height:8px;opacity:.4}50%{height:var(--h);opacity:1}}
+
+.pulse{animation:pu 2s ease-out infinite}
+@keyframes pu{0%{transform:scale(.9);opacity:.5}100%{transform:scale(1.4);opacity:0}}
+
+.fl{animation:fl 6s ease-in-out infinite}
+@keyframes fl{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+
+.pf{transition:width 1s ease}
+
+.toast{position:fixed;top:90px;right:16px;z-index:9999;padding:14px 20px;border-radius:12px;background:var(--card);border:1px solid rgba(0,210,196,.25);color:#fff;font-size:13px;max-width:320px;transform:translateX(120%);transition:transform .4s;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.toast.show{transform:translateX(0)}
+
+.hb span{display:block;width:22px;height:2px;background:#fff;margin:5px 0;border-radius:2px;transition:.3s}
+.hb.open span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
+.hb.open span:nth-child(2){opacity:0}
+.hb.open span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
+
+.mmo{position:fixed;inset:0;z-index:90;background:rgba(15,23,42,.97);backdrop-filter:blur(20px);transform:translateX(100%);transition:transform .35s}
+.mmo.open{transform:translateX(0)}
+
+.tg{width:48px;height:26px;border-radius:13px;background:rgba(148,163,184,.25);position:relative;cursor:pointer;transition:.3s;flex-shrink:0}
+.tg.on{background:var(--primary)}
+.tg::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.3s}
+.tg.on::after{transform:translateX(22px)}
+
+input[type=range]{-webkit-appearance:none;width:100%;height:6px;background:rgba(148,163,184,.15);border-radius:3px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--primary);cursor:pointer;box-shadow:0 0 10px rgba(0,210,196,.4)}
+
+.tb{padding:10px 20px;border-radius:10px;font-size:13px;font-weight:500;color:var(--textsec);cursor:pointer;transition:.25s;white-space:nowrap}
+.tb.active{background:var(--primary);color:var(--bg)}
+
+.hi{border-left:3px solid transparent;transition:.25s}
+.hi:hover{border-left-color:var(--primary);background:rgba(0,210,196,.03)}
+
+.pb{background-image:radial-gradient(rgba(0,210,196,.025) 1px,transparent 1px);background-size:24px 24px}
+
+.nb{display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:14px;font-size:22px;font-weight:700}
+
+.sl{width:2px;height:36px;background:linear-gradient(to bottom,var(--primary),transparent);margin:0 auto}
+
+.cm{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;padding:16px}
+.cm.open{display:flex}
+
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body class="pb">
+
+<div id="toast" class="toast"><div class="flex items-center gap-3"><i class="fa-solid fa-circle-check text-primary"></i><span id="toastMsg"></span></div></div>
+
+<!-- ===== DESKTOP NAV ===== -->
+<nav class="nav-desktop fixed top-0 left-0 right-0 z-50 items-center justify-between px-6 lg:px-12 py-4" style="background:rgba(15,23,42,.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(148,163,184,.07)">
+  <a href="#/home" onclick="event.preventDefault();nav('home')" class="flex items-center gap-2">
+    <div class="w-9 h-9 rounded-lg bg-primary flex items-center justify-center"><i class="fa-solid fa-music text-sm" style="color:#0F172A"></i></div>
+    <span class="text-lg font-bold tracking-tight">Vocal<span class="text-primary">AI</span></span>
+  </a>
+  <div class="hidden lg:flex items-center gap-1" id="dNav">
+    <a href="#/home" onclick="event.preventDefault();nav('home')" class="nl px-4 py-2 rounded-lg text-sm font-medium text-textsec hover:text-white hover:bg-white/5 transition" data-p="home">Beranda</a>
+    <a href="#/fitur" onclick="event.preventDefault();nav('fitur')" class="nl px-4 py-2 rounded-lg text-sm font-medium text-textsec hover:text-white hover:bg-white/5 transition" data-p="fitur">Fitur</a>
+    <a href="#/carakerja" onclick="event.preventDefault();nav('carakerja')" class="nl px-4 py-2 rounded-lg text-sm font-medium text-textsec hover:text-white hover:bg-white/5 transition" data-p="carakerja">Cara Kerja</a>
+    <a href="#/tuner" onclick="event.preventDefault();nav('tuner')" class="nl px-4 py-2 rounded-lg text-sm font-medium text-textsec hover:text-white hover:bg-white/5 transition" data-p="tuner">Tuner</a>
+    <a href="#/analisis" onclick="event.preventDefault();nav('analisis')" class="nl px-4 py-2 rounded-lg text-sm font-medium text-textsec hover:text-white hover:bg-white/5 transition" data-p="analisis">Analisis</a>
+    <a href="#/deteksi" onclick="event.preventDefault();nav('deteksi')" class="nl px-4 py-2 rounded-lg text-sm font-medium text-textsec hover:text-white hover:bg-white/5 transition" data-p="deteksi">Deteksi Nada</a>
+    <a href="#/latihan" onclick="event.preventDefault();nav('latihan')" class="nl px-4 py-2 rounded-lg text-sm font-medium text-textsec hover:text-white hover:bg-white/5 transition" data-p="latihan">Latihan</a>
+    <a href="#/riwayat" onclick="event.preventDefault();nav('riwayat')" class="nl px-4 py-2 rounded-lg text-sm font-medium text-textsec hover:text-white hover:bg-white/5 transition" data-p="riwayat">Riwayat</a>
+    <a href="#/pengaturan" onclick="event.preventDefault();nav('pengaturan')" class="nl px-4 py-2 rounded-lg text-sm font-medium text-textsec hover:text-white hover:bg-white/5 transition" data-p="pengaturan">Pengaturan</a>
+    <a href="#/tentang" onclick="event.preventDefault();nav('tentang')" class="nl px-4 py-2 rounded-lg text-sm font-medium text-textsec hover:text-white hover:bg-white/5 transition" data-p="tentang">Tentang</a>
+  </div>
+  <a href="#/tuner" onclick="event.preventDefault();nav('tuner')" class="hidden lg:flex items-center gap-2 bg-primary text-bgdark px-5 py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 transition"><i class="fa-solid fa-microphone"></i> Mulai Sekarang</a>
+</nav>
+
+<!-- ===== HAMBURGER ===== -->
+<div class="md:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-4" style="background:rgba(15,23,42,.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(148,163,184,.07)">
+  <a href="#/home" onclick="event.preventDefault();nav('home')" class="flex items-center gap-2">
+    <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center"><i class="fa-solid fa-music text-xs" style="color:#0F172A"></i></div>
+    <span class="text-base font-bold">Vocal<span class="text-primary">AI</span></span>
+  </a>
+  <div class="hb" id="hbBtn" onclick="toggleMM()"><span></span><span></span><span></span></div>
+</div>
+
+<!-- ===== MOBILE MENU ===== -->
+<div class="mmo md:hidden" id="mMenu">
+  <div class="pt-20 px-6 flex flex-col gap-1">
+    <a href="#/home" onclick="event.preventDefault();nav('home');toggleMM()" class="text-left px-4 py-3 rounded-xl text-textsec hover:text-white hover:bg-white/5 text-sm font-medium"><i class="fa-solid fa-house w-6"></i> Beranda</a>
+    <a href="#/fitur" onclick="event.preventDefault();nav('fitur');toggleMM()" class="text-left px-4 py-3 rounded-xl text-textsec hover:text-white hover:bg-white/5 text-sm font-medium"><i class="fa-solid fa-star w-6"></i> Fitur</a>
+    <a href="#/carakerja" onclick="event.preventDefault();nav('carakerja');toggleMM()" class="text-left px-4 py-3 rounded-xl text-textsec hover:text-white hover:bg-white/5 text-sm font-medium"><i class="fa-solid fa-gears w-6"></i> Cara Kerja</a>
+    <a href="#/tuner" onclick="event.preventDefault();nav('tuner');toggleMM()" class="text-left px-4 py-3 rounded-xl text-textsec hover:text-white hover:bg-white/5 text-sm font-medium"><i class="fa-solid fa-microphone w-6"></i> Tuner</a>
+    <a href="#/analisis" onclick="event.preventDefault();nav('analisis');toggleMM()" class="text-left px-4 py-3 rounded-xl text-textsec hover:text-white hover:bg-white/5 text-sm font-medium"><i class="fa-solid fa-chart-line w-6"></i> Analisis</a>
+    <a href="#/deteksi" onclick="event.preventDefault();nav('deteksi');toggleMM()" class="text-left px-4 py-3 rounded-xl text-textsec hover:text-white hover:bg-white/5 text-sm font-medium"><i class="fa-solid fa-bullseye w-6"></i> Deteksi Nada</a>
+    <a href="#/latihan" onclick="event.preventDefault();nav('latihan');toggleMM()" class="text-left px-4 py-3 rounded-xl text-textsec hover:text-white hover:bg-white/5 text-sm font-medium"><i class="fa-solid fa-dumbbell w-6"></i> Latihan</a>
+    <a href="#/riwayat" onclick="event.preventDefault();nav('riwayat');toggleMM()" class="text-left px-4 py-3 rounded-xl text-textsec hover:text-white hover:bg-white/5 text-sm font-medium"><i class="fa-solid fa-clock-rotate-left w-6"></i> Riwayat</a>
+    <a href="#/pengaturan" onclick="event.preventDefault();nav('pengaturan');toggleMM()" class="text-left px-4 py-3 rounded-xl text-textsec hover:text-white hover:bg-white/5 text-sm font-medium"><i class="fa-solid fa-sliders w-6"></i> Pengaturan</a>
+    <a href="#/tentang" onclick="event.preventDefault();nav('tentang');toggleMM()" class="text-left px-4 py-3 rounded-xl text-textsec hover:text-white hover:bg-white/5 text-sm font-medium"><i class="fa-solid fa-circle-info w-6"></i> Tentang</a>
+  </div>
+</div>
+
+<!-- ===== BOTTOM NAV ===== -->
+<div class="nav-mobile flex justify-around items-center" id="bNav">
+  <div class="ni active" data-p="home" onclick="nav('home')"><i class="fa-solid fa-house"></i><span>Beranda</span></div>
+  <div class="ni" data-p="tuner" onclick="nav('tuner')"><i class="fa-solid fa-microphone"></i><span>Tuner</span></div>
+  <div class="ni" data-p="analisis" onclick="nav('analisis')"><i class="fa-solid fa-chart-line"></i><span>Analisis</span></div>
+  <div class="ni" data-p="latihan" onclick="nav('latihan')"><i class="fa-solid fa-dumbbell"></i><span>Latihan</span></div>
+  <div class="ni" data-p="pengaturan" onclick="nav('pengaturan')"><i class="fa-solid fa-sliders"></i><span>Setting</span></div>
+</div>
+
+<!-- ================================================================ -->
+<!-- PAGE 1: BERANDA -->
+<!-- ================================================================ -->
+<div class="page active" id="pg-home">
+<div class="relative overflow-hidden">
+  <div class="blob w-72 h-72 bg-primary top-20 -left-20" style="position:absolute"></div>
+  <div class="blob w-96 h-96 bg-secondary top-40 -right-32" style="position:absolute"></div>
+  <div class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pt-10 sm:pt-16 pb-24">
+    <div class="text-center max-w-3xl mx-auto">
+      <div class="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-1.5 mb-6">
+        <span class="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
+        <span class="text-primary text-xs font-medium">AI-Powered Audio Technology</span>
+      </div>
+      <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">Tuning Vokal<br><span class="gt">Lebih Presisi</span><br>dengan Kecerdasan Buatan</h1>
+      <p class="text-textsec text-sm sm:text-base leading-relaxed max-w-xl mx-auto mb-8">Deteksi nada, analisis kestabilan vokal, dan tingkatkan kemampuan menyanyi Anda secara real-time dengan teknologi AI terdepan.</p>
+      <div class="flex flex-col sm:flex-row gap-3 justify-center">
+        <a href="#/tuner" onclick="event.preventDefault();nav('tuner')" class="bg-primary text-bgdark px-8 py-3.5 rounded-xl font-semibold text-sm hover:opacity-90 transition flex items-center justify-center gap-2"><i class="fa-solid fa-microphone"></i> Mulai Tuning</a>
+        <a href="#/fitur" onclick="event.preventDefault();nav('fitur')" class="border border-textsec/20 text-white px-8 py-3.5 rounded-xl font-semibold text-sm hover:bg-white/5 transition flex items-center justify-center gap-2"><i class="fa-solid fa-play"></i> Pelajari Lebih</a>
+      </div>
+    </div>
+    <div class="flex items-center justify-center gap-1 mt-12 mb-16" id="hWave"></div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-w-3xl mx-auto mb-16">
+      <div class="sc text-center"><div class="text-2xl sm:text-3xl font-bold text-primary">98.5%</div><div class="text-textsec text-xs mt-1">Akurasi Deteksi</div></div>
+      <div class="sc text-center"><div class="text-2xl sm:text-3xl font-bold text-secondary">12ms</div><div class="text-textsec text-xs mt-1">Latensi Real-time</div></div>
+      <div class="sc text-center"><div class="text-2xl sm:text-3xl font-bold text-accent">50K+</div><div class="text-textsec text-xs mt-1">Pengguna Aktif</div></div>
+      <div class="sc text-center"><div class="text-2xl sm:text-3xl font-bold text-white">88</div><div class="text-textsec text-xs mt-1">Nada Didukung</div></div>
+    </div>
+    <div class="text-center mb-10"><h2 class="text-xl sm:text-2xl font-bold mb-2">Mengapa VocalAI?</h2><p class="text-textsec text-sm max-w-md mx-auto">Tiga pilar utama yang membuat VocalAI menjadi partner terbaik untuk pengembangan vokal Anda.</p></div>
+    <div class="grid sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
+      <div class="sc ch text-center"><div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-bolt text-primary text-xl"></i></div><h3 class="font-semibold text-sm mb-2">Deteksi Instan</h3><p class="text-textsec text-xs leading-relaxed">Identifikasi nada dan frekuensi dalam hitungan milidetik menggunakan algoritma AI canggih.</p></div>
+      <div class="sc ch text-center"><div class="w-14 h-14 rounded-2xl bg-secondary/10 flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-chart-line text-secondary text-xl"></i></div><h3 class="font-semibold text-sm mb-2">Analisis Mendalam</h3><p class="text-textsec text-xs leading-relaxed">Visualisasi pitch, vibrato, dan kestabilan vokal dengan grafik interaktif yang detail.</p></div>
+      <div class="sc ch text-center"><div class="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-graduation-cap text-accent text-xl"></i></div><h3 class="font-semibold text-sm mb-2">Latihan Adaptif</h3><p class="text-textsec text-xs leading-relaxed">Program latihan yang menyesuaikan dengan level kemampuan dan progress Anda secara personal.</p></div>
+    </div>
+    <div class="mt-16 text-center"><div class="inline-block bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 border border-white/5 rounded-2xl p-8 sm:p-12 max-w-lg"><h3 class="text-lg sm:text-xl font-bold mb-3">Siap Meningkatkan Vokal Anda?</h3><p class="text-textsec text-sm mb-6">Gratis untuk digunakan. Tanpa perlu registrasi.</p><a href="#/tuner" onclick="event.preventDefault();nav('tuner')" class="bg-accent text-bgdark px-8 py-3 rounded-xl font-semibold text-sm hover:opacity-90 transition inline-block">Coba Sekarang <i class="fa-solid fa-arrow-right ml-2"></i></a></div></div>
+  </div>
+</div>
+</div>
+
+<!-- ================================================================ -->
+<!-- PAGE 2: FITUR -->
+<!-- ================================================================ -->
+<div class="page" id="pg-fitur">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 pb-24">
+  <div class="text-center mb-12 pt-4">
+    <div class="inline-flex items-center gap-2 bg-secondary/10 border border-secondary/20 rounded-full px-4 py-1.5 mb-4"><i class="fa-solid fa-star text-secondary text-xs"></i><span class="text-secondary text-xs font-medium">Fitur Lengkap</span></div>
+    <h1 class="text-2xl sm:text-3xl font-bold mb-3">Semua yang Anda Butuhkan</h1>
+    <p class="text-textsec text-sm max-w-md mx-auto">Rangkaian fitur komprehensif yang dirancang khusus untuk analisis dan pengembangan vokal.</p>
+  </div>
+  <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4" id="fiturGrid"></div>
+</div>
+</div>
+
+<!-- ================================================================ -->
+<!-- PAGE 3: CARA KERJA -->
+<!-- ================================================================ -->
+<div class="page" id="pg-carakerja">
+<div class="max-w-3xl mx-auto px-4 sm:px-6 pb-24">
+  <div class="text-center mb-12 pt-4">
+    <div class="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-1.5 mb-4"><i class="fa-solid fa-route text-primary text-xs"></i><span class="text-primary text-xs font-medium">User Flow</span></div>
+    <h1 class="text-2xl sm:text-3xl font-bold mb-3">Cara Kerja VocalAI</h1>
+    <p class="text-textsec text-sm max-w-md mx-auto">Empat langkah sederhana untuk mulai menganalisis dan meningkatkan kualitas vokal Anda.</p>
+  </div>
+  <div id="stepsC"></div>
+  <div class="text-center mt-10"><a href="#/tuner" onclick="event.preventDefault();nav('tuner')" class="bg-primary text-bgdark px-8 py-3 rounded-xl font-semibold text-sm hover:opacity-90 transition inline-block">Mulai Langkah Pertama <i class="fa-solid fa-arrow-right ml-2"></i></a></div>
+</div>
+</div>
+
+<!-- ================================================================ -->
+<!-- PAGE 4: TUNER -->
+<!-- ================================================================ -->
+<div class="page" id="pg-tuner">
+<div class="max-w-2xl mx-auto px-4 sm:px-6 pb-24">
+  <div class="text-center mb-8 pt-4"><h1 class="text-2xl sm:text-3xl font-bold mb-2">Chromatic Tuner</h1><p class="text-textsec text-sm">Bernyanyi atau mainkan nada untuk melihat deteksi real-time</p></div>
+  <div class="flex justify-center mb-6">
+    <div class="relative">
+      <div class="absolute inset-0 rounded-full border-2 border-primary/30 pulse" id="tPulse" style="display:none"></div>
+      <div class="t-ring" id="tRing" style="background:conic-gradient(rgba(30,41,59,.8) 0deg)">
+        <div class="t-ring-in">
+          <div class="text-[10px] text-textsec uppercase tracking-wider mb-1">Nada</div>
+          <div class="text-4xl font-bold text-primary" id="tNote">--</div>
+          <div class="text-[10px] text-textsec mt-1" id="tOct">Oktave -</div>
+          <div class="text-xs text-textsec mt-2" id="tFreq">-- Hz</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="sc mb-4">
+    <div class="flex items-center justify-between mb-3"><span class="text-xs text-textsec">Akurasi</span><span class="text-xs font-mono" id="tCent">0 cent</span></div>
+    <div class="relative h-3 bg-bgdark rounded-full overflow-hidden"><div class="absolute inset-y-0 left-1/2 w-0.5 bg-white/30"></div><div class="absolute top-0 h-full w-3 bg-primary rounded-full transition-all duration-200" id="tBar" style="left:calc(50% - 6px)"></div></div>
+    <div class="flex justify-between mt-2"><span class="text-[10px] text-textsec">-50</span><span class="text-[10px] text-primary font-medium">Tuning Pas</span><span class="text-[10px] text-textsec">+50</span></div>
+  </div>
+  <div class="sc mb-6">
+    <div class="flex items-center justify-between mb-3"><span class="text-xs text-textsec">Waveform</span><div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full" id="tDot" style="background:#ef4444"></span><span class="text-[10px] text-textsec" id="tStat">Siap</span></div></div>
+    <canvas id="wC" width="600" height="80" class="w-full rounded-lg" style="height:80px;background:var(--bg)"></canvas>
+  </div>
+  <div class="flex gap-3 justify-center">
+    <button onclick="toggleT()" class="bg-primary text-bgdark px-8 py-3 rounded-xl font-semibold text-sm hover:opacity-90 transition flex items-center gap-2"><i class="fa-solid fa-microphone" id="tIco"></i><span id="tTxt">Mulai</span></button>
+    <button onclick="resetT()" class="border border-textsec/20 text-white px-6 py-3 rounded-xl font-semibold text-sm hover:bg-white/5 transition"><i class="fa-solid fa-rotate-left"></i></button>
+  </div>
+  <div class="mt-8 sc"><h3 class="font-semibold text-sm mb-3">Referensi Nada</h3><div class="grid grid-cols-4 sm:grid-cols-8 gap-2 text-center" id="refN"></div><p class="text-[10px] text-textsec mt-3 text-center">Frekuensi dalam Hz berdasarkan A4 = 440 Hz (Equal Temperament)</p></div>
+</div>
+</div>
+
+<!-- ================================================================ -->
+<!-- PAGE 5: ANALISIS -->
+<!-- ================================================================ -->
+<div class="page" id="pg-analisis">
+<div class="max-w-4xl mx-auto px-4 sm:px-6 pb-24">
+  <div class="text-center mb-8 pt-4"><h1 class="text-2xl sm:text-3xl font-bold mb-2">Analisis Vokal</h1><p class="text-textsec text-sm">Dashboard lengkap performa vokal Anda</p></div>
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+    <div class="sc text-center"><div class="text-xs text-textsec mb-2">Skor Keseluruhan</div><div class="font-bold text-primary" style="font-size:28px">87<span class="text-lg">/100</span></div></div>
+    <div class="sc text-center"><div class="text-xs text-textsec mb-2">Kestabilan Pitch</div><div class="font-bold text-secondary" style="font-size:28px">92<span class="text-lg">%</span></div></div>
+    <div class="sc text-center"><div class="text-xs text-textsec mb-2">Jitter</div><div class="font-bold text-accent" style="font-size:28px">0.4<span class="text-lg">%</span></div></div>
+    <div class="sc text-center"><div class="text-xs text-textsec mb-2">Shimmer</div><div class="font-bold text-white" style="font-size:28px">2.1<span class="text-lg">%</span></div></div>
+  </div>
+  <div class="sc mb-4">
+    <div class="flex items-center justify-between mb-4"><h3 class="font-semibold text-sm">Pitch Contour</h3><div class="flex gap-1"><button class="tb active text-[11px] px-3 py-1" onclick="swTb(this)">Pitch</button><button class="tb text-[11px] px-3 py-1" onclick="swTb(this)">Volume</button></div></div>
+    <canvas id="pC" width="800" height="200" class="w-full rounded-lg" style="height:180px;background:var(--bg)"></canvas>
+  </div>
+  <div class="sc mb-4"><h3 class="font-semibold text-sm mb-4">Distribusi Nada</h3><div class="space-y-3" id="nDist"></div></div>
+  <div class="grid sm:grid-cols-2 gap-4">
+    <div class="sc"><h3 class="font-semibold text-sm mb-4">Detail Parameter</h3><div class="space-y-3" id="pBars"></div></div>
+    <div class="sc"><h3 class="font-semibold text-sm mb-4">Saran AI</h3><div id="aiT"></div></div>
+  </div>
+</div>
+</div>
+
+<!-- ================================================================ -->
+<!-- PAGE 6: DETEKSI NADA -->
+<!-- ================================================================ -->
+<div class="page" id="pg-deteksi">
+<div class="max-w-3xl mx-auto px-4 sm:px-6 pb-24">
+  <div class="text-center mb-8 pt-4"><h1 class="text-2xl sm:text-3xl font-bold mb-2">Deteksi Nada</h1><p class="text-textsec text-sm">Identifikasi nada dari audio yang dimasukkan</p></div>
+  <div class="sc mb-4 overflow-x-auto"><h3 class="font-semibold text-sm mb-4">Keyboard Interaktif</h3><div class="flex justify-center min-w-[320px]" id="piano"></div></div>
+  <div class="sc mb-4"><h3 class="font-semibold text-sm mb-4">Nada Terdeteksi</h3><div class="grid grid-cols-4 sm:grid-cols-8 gap-2" id="detN"></div></div>
+  <div class="sc mb-4"><h3 class="font-semibold text-sm mb-4">Tabel Frekuensi</h3><div class="overflow-x-auto"><table class="w-full text-xs"><thead><tr class="text-textsec border-b border-white/5"><th class="text-left py-2 pr-4 font-medium">Nada</th><th class="text-right py-2 px-3 font-medium">Okt. 3</th><th class="text-right py-2 px-3 font-medium">Okt. 4</th><th class="text-right py-2 px-3 font-medium">Okt. 5</th><th class="text-right py-2 pl-3 font-medium">Okt. 6</th></tr></thead><tbody id="fTbl"></tbody></table></div></div>
+  <div class="sc"><h3 class="font-semibold text-sm mb-3">Cari Berdasarkan Frekuensi</h3><div class="flex gap-2"><input type="number" id="fIn" placeholder="Masukkan frekuensi Hz..." class="flex-1 bg-bgdark border border-white/10 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition text-white placeholder:text-textsec/50"><button onclick="lookupF()" class="bg-primary text-bgdark px-5 py-2.5 rounded-xl font-semibold text-sm hover:opacity-90 transition shrink-0">Cari</button></div><div id="fRes" class="mt-3 text-sm hidden"></div></div>
+</div>
+</div>
+
+<!-- ================================================================ -->
+<!-- PAGE 7: LATIHAN -->
+<!-- ================================================================ -->
+<div class="page" id="pg-latihan">
+<div class="max-w-3xl mx-auto px-4 sm:px-6 pb-24">
+  <div class="text-center mb-8 pt-4"><h1 class="text-2xl sm:text-3xl font-bold mb-2">Latihan Vokal</h1><p class="text-textsec text-sm">Program latihan yang disesuaikan dengan level Anda</p></div>
+  <div class="flex gap-2 justify-center mb-8 overflow-x-auto pb-2">
+    <button class="tb active" onclick="swLv(this,'beginner')">Pemula</button>
+    <button class="tb" onclick="swLv(this,'intermediate')">Menengah</button>
+    <button class="tb" onclick="swLv(this,'advanced')">Lanjut</button>
+  </div>
+  <div class="space-y-4" id="exL"></div>
+  <div class="sc mt-8"><h3 class="font-semibold text-sm mb-4">Progress Harian</h3><div class="flex items-end justify-between gap-1 h-24 mb-3" id="dPr"></div><div class="flex justify-between text-[10px] text-textsec"><span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span><span>Min</span></div></div>
+</div>
+</div>
+
+<!-- ================================================================ -->
+<!-- PAGE 8: RIWAYAT -->
+<!-- ================================================================ -->
+<div class="page" id="pg-riwayat">
+<div class="max-w-3xl mx-auto px-4 sm:px-6 pb-24">
+  <div class="text-center mb-8 pt-4"><h1 class="text-2xl sm:text-3xl font-bold mb-2">Riwayat Sesi</h1><p class="text-textsec text-sm">Catatan lengkap semua sesi latihan Anda</p></div>
+  <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+    <button class="tb active" onclick="fH(this,'all')">Semua</button>
+    <button class="tb" onclick="fH(this,'tuner')">Tuner</button>
+    <button class="tb" onclick="fH(this,'analisis')">Analisis</button>
+    <button class="tb" onclick="fH(this,'latihan')">Latihan</button>
+  </div>
+  <div class="grid grid-cols-3 gap-3 mb-6">
+    <div class="sc text-center"><div class="text-xl font-bold text-primary">47</div><div class="text-[10px] text-textsec">Total Sesi</div></div>
+    <div class="sc text-center"><div class="text-xl font-bold text-secondary">12.5<span class="text-xs">jam</span></div><div class="text-[10px] text-textsec">Waktu Latihan</div></div>
+    <div class="sc text-center"><div class="text-xl font-bold text-accent">+18%</div><div class="text-[10px] text-textsec">Peningkatan</div></div>
+  </div>
+  <div class="space-y-2" id="hL"></div>
+  <div class="text-center mt-6"><button onclick="toast('Semua riwayat sudah ditampilkan')" class="border border-textsec/20 text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-white/5 transition">Muat Lebih Banyak</button></div>
+</div>
+</div>
+
+<!-- ================================================================ -->
+<!-- PAGE 9: PENGATURAN -->
+<!-- ================================================================ -->
+<div class="page" id="pg-pengaturan">
+<div class="max-w-2xl mx-auto px-4 sm:px-6 pb-24">
+  <div class="text-center mb-8 pt-4"><h1 class="text-2xl sm:text-3xl font-bold mb-2">Pengaturan</h1><p class="text-textsec text-sm">Sesuaikan pengalaman VocalAI sesuai preferensi Anda</p></div>
+  <div class="sc mb-4"><h3 class="font-semibold text-sm mb-4 flex items-center gap-2"><i class="fa-solid fa-volume-high text-primary text-xs"></i> Pengaturan Audio</h3><div class="space-y-5"><div><div class="flex justify-between text-xs mb-2"><span class="text-textsec">Referensi A4</span><span class="font-mono" id="a4V">440 Hz</span></div><input type="range" min="420" max="460" value="440" oninput="document.getElementById('a4V').textContent=this.value+' Hz'"></div><div><div class="flex justify-between text-xs mb-2"><span class="text-textsec">Sensitivitas Mikrofon</span><span class="font-mono" id="senV">75%</span></div><input type="range" min="10" max="100" value="75" oninput="document.getElementById('senV').textContent=this.value+'%'"></div><div><div class="flex justify-between text-xs mb-2"><span class="text-textsec">Buffer Size</span><span class="font-mono" id="bufV">2048</span></div><input type="range" min="512" max="8192" step="512" value="2048" oninput="document.getElementById('bufV').textContent=this.value"></div></div></div>
+  <div class="sc mb-4"><h3 class="font-semibold text-sm mb-4 flex items-center gap-2"><i class="fa-solid fa-palette text-secondary text-xs"></i> Tampilan</h3><div class="space-y-4"><div class="flex items-center justify-between"><div><div class="text-xs font-medium">Mode Gelap</div><div class="text-[11px] text-textsec">Tema gelap untuk kenyamanan mata</div></div><div class="tg on" onclick="this.classList.toggle('on');toast('Tema diperbarui')"></div></div><div class="flex items-center justify-between"><div><div class="text-xs font-medium">Animasi</div><div class="text-[11px] text-textsec">Efek animasi pada elemen UI</div></div><div class="tg on" onclick="this.classList.toggle('on')"></div></div><div class="flex items-center justify-between"><div><div class="text-xs font-medium">Waveform Real-time</div><div class="text-[11px] text-textsec">Tampilkan visualisasi gelombang audio</div></div><div class="tg on" onclick="this.classList.toggle('on')"></div></div></div></div>
+  <div class="sc mb-4"><h3 class="font-semibold text-sm mb-4 flex items-center gap-2"><i class="fa-solid fa-bell text-accent text-xs"></i> Notifikasi</h3><div class="space-y-4"><div class="flex items-center justify-between"><div><div class="text-xs font-medium">Reminder Latihan</div><div class="text-[11px] text-textsec">Pengingat latihan harian</div></div><div class="tg" onclick="this.classList.toggle('on');toast('Reminder '+(this.classList.contains('on')?'diaktifkan':'dinonaktifkan'))"></div></div><div class="flex items-center justify-between"><div><div class="text-xs font-medium">Suara Notifikasi</div><div class="text-[11px] text-textsec">Putar suara saat target tercapai</div></div><div class="tg on" onclick="this.classList.toggle('on')"></div></div></div></div>
+  <div class="sc mb-4"><h3 class="font-semibold text-sm mb-4 flex items-center gap-2"><i class="fa-solid fa-database text-primary text-xs"></i> Data & Privasi</h3><div class="space-y-2"><button onclick="toast('Riwayat diekspor')" class="w-full text-left flex items-center justify-between px-4 py-3 rounded-xl bg-bgdark hover:bg-white/5 transition text-xs"><span class="flex items-center gap-2"><i class="fa-solid fa-file-export text-primary"></i> Ekspor Riwayat (CSV)</span><i class="fa-solid fa-chevron-right text-textsec text-[10px]"></i></button><button onclick="toast('Laporan PDF disiapkan')" class="w-full text-left flex items-center justify-between px-4 py-3 rounded-xl bg-bgdark hover:bg-white/5 transition text-xs"><span class="flex items-center gap-2"><i class="fa-solid fa-file-pdf text-secondary"></i> Unduh Laporan (PDF)</span><i class="fa-solid fa-chevron-right text-textsec text-[10px]"></i></button><button onclick="cfClr()" class="w-full text-left flex items-center justify-between px-4 py-3 rounded-xl bg-bgdark hover:bg-red-500/10 transition text-xs text-red-400"><span class="flex items-center gap-2"><i class="fa-solid fa-trash"></i> Hapus Semua Data</span><i class="fa-solid fa-chevron-right text-[10px]"></i></button></div></div>
+  <div class="text-center text-[11px] text-textsec/50 mt-8">VocalAI v2.4.1 — Build 20241207<br>&copy; 2024 Andi Farid Ryan Saputra</div>
+</div>
+</div>
+
+<!-- ================================================================ -->
+<!-- PAGE 10: TENTANG -->
+<!-- ================================================================ -->
+<div class="page" id="pg-tentang">
+<div class="max-w-3xl mx-auto px-4 sm:px-6 pb-24">
+  <div class="text-center mb-10 pt-4">
+    <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center mx-auto mb-5 fl"><i class="fa-solid fa-wave-square text-3xl" style="color:#0F172A"></i></div>
+    <h1 class="text-2xl sm:text-3xl font-bold mb-2">Tentang VocalAI</h1>
+    <p class="text-textsec text-sm">AI-Powered Vocal Tuning & Analysis Platform</p>
+  </div>
+  <div class="sc mb-4"><h3 class="font-semibold text-sm mb-3">Informasi Proyek</h3><div class="space-y-3 text-xs"><div class="flex justify-between py-2 border-b border-white/5"><span class="text-textsec">Nama Proyek</span><span class="font-medium">VocalAI — Audio Tuner</span></div><div class="flex justify-between py-2 border-b border-white/5"><span class="text-textsec">Versi</span><span class="font-mono">2.4.1</span></div><div class="flex justify-between py-2 border-b border-white/5"><span class="text-textsec">Kategori</span><span>Audio Processing, AI, Education</span></div><div class="flex justify-between py-2 border-b border-white/5"><span class="text-textsec">Teknologi</span><span>Web Audio API, Canvas, JS</span></div><div class="flex justify-between py-2"><span class="text-textsec">Lisensi</span><span>MIT License</span></div></div></div>
+  <div class="sc mb-4"><h3 class="font-semibold text-sm mb-4">Pengembang</h3><div class="flex items-center gap-4"><div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center text-xl font-bold text-primary shrink-0">AF</div><div><div class="text-sm font-semibold">Andi Farid Ryan Saputra</div><div class="text-xs text-textsec">NIM: 60900124005 — Kelas A</div><div class="text-xs text-textsec mt-0.5">Tugas Praktikum 7 UI/UX Design</div></div></div></div>
+  <div class="sc mb-4"><h3 class="font-semibold text-sm mb-4">Filosofi Desain</h3><div class="space-y-4"><div class="flex gap-3 items-start"><div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0"><i class="fa-solid fa-eye text-primary text-xs"></i></div><div><div class="text-xs font-medium mb-0.5">Dark Mode Primer</div><div class="text-[11px] text-textsec leading-relaxed">Latar gelap (#0F172A) dipilih untuk mengurangi kelelahan mata saat penggunaan berkepanjangan, terutama di studio atau ruang latihan dengan pencahayaan redup.</div></div></div><div class="flex gap-3 items-start"><div class="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center shrink-0"><i class="fa-solid fa-droplet text-secondary text-xs"></i></div><div><div class="text-xs font-medium mb-0.5">Turquoise sebagai Identitas</div><div class="text-[11px] text-textsec leading-relaxed">Warna primary #00D2C4 melambangkan teknologi audio modern dan inovasi AI, memberikan kesan futuristik namun tetap hangat dan tidak intimidatif.</div></div></div><div class="flex gap-3 items-start"><div class="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center shrink-0"><i class="fa-solid fa-bullseye text-accent text-xs"></i></div><div><div class="text-xs font-medium mb-0.5">Aksen Terfokus</div><div class="text-[11px] text-textsec leading-relaxed">Orange (#FFBE76) digunakan secara sparatis hanya untuk elemen krusial — tombol aksi utama dan indikator penting — agar mata pengguna langsung tertuju ke tempat yang benar.</div></div></div><div class="flex gap-3 items-start"><div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0"><i class="fa-solid fa-universal-access text-primary text-xs"></i></div><div><div class="text-xs font-medium mb-0.5">Aksesibilitas & Responsivitas</div><div class="text-[11px] text-textsec leading-relaxed">Desain mobile-first memastikan pengalaman konsisten di semua ukuran layar, dengan kontras warna yang memenuhi standar WCAG AA untuk keterbacaan maksimal.</div></div></div></div></div>
+  <div class="sc mb-4"><h3 class="font-semibold text-sm mb-4">Teknologi yang Digunakan</h3><div class="grid grid-cols-2 sm:grid-cols-3 gap-3"><div class="bg-bgdark rounded-xl p-3 text-center"><i class="fa-brands fa-html5 text-orange-500 text-lg mb-1"></i><div class="text-[11px] font-medium">HTML5</div></div><div class="bg-bgdark rounded-xl p-3 text-center"><i class="fa-brands fa-css3-alt text-blue-400 text-lg mb-1"></i><div class="text-[11px] font-medium">CSS3 / Tailwind</div></div><div class="bg-bgdark rounded-xl p-3 text-center"><i class="fa-brands fa-js text-yellow-400 text-lg mb-1"></i><div class="text-[11px] font-medium">JavaScript ES6+</div></div><div class="bg-bgdark rounded-xl p-3 text-center"><i class="fa-solid fa-headphones text-primary text-lg mb-1"></i><div class="text-[11px] font-medium">Web Audio API</div></div><div class="bg-bgdark rounded-xl p-3 text-center"><i class="fa-solid fa-paintbrush text-secondary text-lg mb-1"></i><div class="text-[11px] font-medium">Canvas API</div></div><div class="bg-bgdark rounded-xl p-3 text-center"><i class="fa-solid fa-font text-accent text-lg mb-1"></i><div class="text-[11px] font-medium">Google Fonts</div></div></div></div>
+  <div class="sc"><h3 class="font-semibold text-sm mb-4">Hubungi Pengembang</h3><div class="space-y-2"><a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-bgdark hover:bg-white/5 transition text-xs"><i class="fa-solid fa-envelope text-primary"></i><span>andifarid@student.ac.id</span></a><a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-bgdark hover:bg-white/5 transition text-xs"><i class="fa-brands fa-github text-white"></i><span>github.com/andifarid</span></a><a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-bgdark hover:bg-white/5 transition text-xs"><i class="fa-brands fa-linkedin text-blue-400"></i><span>linkedin.com/in/andifarid</span></a></div></div>
+</div>
+</div>
+
+<!-- ===== CONFIRM MODAL ===== -->
+<div id="cMod" class="cm">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="clC()"></div>
+  <div class="relative bg-carddark border border-white/10 rounded-2xl p-6 max-w-sm w-full">
+    <h3 class="font-semibold text-sm mb-2">Konfirmasi</h3>
+    <p class="text-textsec text-xs mb-5" id="cMsg">Apakah Anda yakin?</p>
+    <div class="flex gap-3 justify-end">
+      <button onclick="clC()" class="px-5 py-2 rounded-xl text-xs font-medium border border-white/10 hover:bg-white/5 transition">Batal</button>
+      <button id="cY" class="px-5 py-2 rounded-xl text-xs font-medium bg-red-500 text-white hover:bg-red-600 transition">Hapus</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA — Semua ikon menggunakan Font Awesome FREE
+// ============================================================
+const NS=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const NC={'C':'#00D2C4','C#':'#00B8AC','D':'#6C5CE7','D#':'#5A4BD6','E':'#FFBE76','F':'#FF9F43','F#':'#EE5A24','G':'#00D2C4','G#':'#6C5CE7','A':'#FFBE76','A#':'#FF9F43','B':'#00D2C4'};
+function nF(n,o){const i=NS.indexOf(n);return 440*Math.pow(2,((o-4)*12+(i-9))/12)}
+function f2n(f){if(f<=0)return null;const n=12*Math.log2(f/440)+69,ni=Math.round(n)%12,o=Math.floor(Math.round(n)/12)-1,c=Math.round((n-Math.round(n))*100);return{note:NS[(ni+12)%12],octave:o,freq:f,cent:c,accuracy:Math.max(0,100-Math.abs(c)*2)}}
+
+// Semua ikon di bawah ini 100% Font Awesome Free
+const FD=[
+  {t:'Chromatic Tuner',d:'Tuner kromatik real-time, 88 nada piano, akurasi 0.1 cent.',ic:'fa-microphone-lines',c:'primary',tags:['Real-time','0.1 cent']},
+  {t:'Pitch Detection',d:'Algoritma YIN yang dioptimasi untuk deteksi frekuensi fundamental.',ic:'fa-wave-square',c:'secondary',tags:['YIN','FFT']},
+  {t:'Vocal Stability',d:'Analisis kestabilan vokal: deviasi pitch, jitter, shimmer.',ic:'fa-chart-area',c:'accent',tags:['Jitter','Shimmer']},
+  {t:'Note Recognition',d:'Pengenalan nama nada otomatis dengan tampilan visual intuitif.',ic:'fa-music',c:'primary',tags:['Auto-detect','88 Keys']},
+  {t:'Session History',d:'Catatan lengkap setiap sesi dengan statistik perkembangan.',ic:'fa-clock-rotate-left',c:'secondary',tags:['Tracking','Export']},
+  {t:'AI Coaching',d:'Saran latihan berbasis AI yang menganalisis pola kesalahan.',ic:'fa-brain',c:'accent',tags:['ML','Adaptive']},
+  {t:'Custom Settings',d:'Sesuaikan A4, threshold sensitivitas, dan tampilan.',ic:'fa-sliders',c:'primary',tags:['A4 Tuning','Config']},
+  {t:'Data Export',d:'Ekspor hasil analisis dalam format PDF atau CSV.',ic:'fa-file-export',c:'secondary',tags:['PDF','CSV']},
+  {t:'Responsive Design',d:'Optimal di semua perangkat — smartphone hingga desktop.',ic:'fa-mobile-screen',c:'accent',tags:['Mobile-first','Cross-device']},
+];
+
+const EX={beginner:[
+  {name:'Breathing Exercise',desc:'Latihan pernapasan diafragma 5 menit',dur:'5 min',diff:1,icon:'fa-wind',cl:'primary'},
+  {name:'Humming C Major',desc:'Humming skala C major satu oktave',dur:'8 min',diff:1,icon:'fa-music',cl:'primary'},
+  {name:'Long Tone C4',desc:'Tahan nada C4 selama mungkin',dur:'5 min',diff:1,icon:'fa-clock',cl:'secondary'},
+  {name:'Siren Exercise',desc:'Slide dari rendah ke tinggi dan sebaliknya',dur:'6 min',diff:2,icon:'fa-arrow-up-right-dots',cl:'secondary'},
+],intermediate:[
+  {name:'Scale Run C–G',desc:'Jalankan skala dari C3 hingga G5',dur:'10 min',diff:2,icon:'fa-stairs',cl:'primary'},
+  {name:'Interval Training',desc:'Latihan interval mayor dan minor',dur:'12 min',diff:3,icon:'fa-arrows-left-right',cl:'secondary'},
+  {name:'Vibrato Control',desc:'Latihan vibrato 5–6 Hz konsisten',dur:'8 min',diff:3,icon:'fa-wave-square',cl:'accent'},
+  {name:'Pitch Accuracy Drill',desc:'Tembak nada acak target 95%',dur:'15 min',diff:3,icon:'fa-bullseye',cl:'accent'},
+],advanced:[
+  {name:'Coloratura Passage',desc:'Passage cepat akurasi tinggi',dur:'15 min',diff:4,icon:'fa-bolt',cl:'accent'},
+  {name:'Mixed Voice Bridge',desc:'Transisi chest–head voice mulus',dur:'12 min',diff:4,icon:'fa-shuffle',cl:'secondary'},
+  {name:'Dynamic Range',desc:'Ekspansi range pp hingga ff',dur:'10 min',diff:4,icon:'fa-volume-high',cl:'primary'},
+  {name:'Sight Singing',desc:'Baca notasi dan nyanyikan langsung',dur:'20 min',diff:5,icon:'fa-eye',cl:'accent'},
+]};
+
+const HIST=[
+  {type:'tuner',title:'Sesi Tuning Vokal',date:'7 Des 2024, 14:32',dur:'12 menit',score:94,detail:'Akurasi rata-rata 94%'},
+  {type:'analisis',title:'Analisis Pitch Full',date:'7 Des 2024, 13:15',dur:'8 menit',score:87,detail:'Jitter 0.4%, Shimmer 2.1%'},
+  {type:'latihan',title:'Scale Run C–G',date:'6 Des 2024, 20:45',dur:'15 menit',score:78,detail:'4/5 latihan selesai'},
+  {type:'tuner',title:'Sesi Tuning Gitar',date:'6 Des 2024, 19:00',dur:'5 menit',score:98,detail:'Semua senar terpas'},
+  {type:'latihan',title:'Vibrato Control',date:'5 Des 2024, 21:30',dur:'10 menit',score:72,detail:'Vibrato 6.8Hz (target 5–6Hz)'},
+  {type:'analisis',title:'Analisis Sebelum Latihan',date:'5 Des 2024, 21:10',dur:'6 menit',score:83,detail:'Kestabilan pitch 89%'},
+  {type:'tuner',title:'Sesi Tuning Vokal',date:'5 Des 2024, 15:20',dur:'20 menit',score:91,detail:'Fokus register tinggi'},
+  {type:'latihan',title:'Breathing Exercise',date:'4 Des 2024, 22:00',dur:'5 menit',score:100,detail:'Selesai sempurna'},
+];
+
+const STEPS=[
+  {t:'Buka Aplikasi & Izinkan Mikrofon',d:'Akses halaman Tuner dan berikan izin akses mikrofon pada browser. Tidak perlu install apapun.',tip:'Data audio tidak disimpan di server',ic:'fa-shield-halved',cl:'primary'},
+  {t:'Nyanyikan Nada ke Mikrofon',d:'Bernyanyilah atau hum nada apa saja. AI menangkap sinyal audio dan memprosesnya secara real-time.',tip:'Proses dalam 12 milidetik',ic:'fa-bolt',cl:'secondary'},
+  {t:'Lihat Hasil Analisis Real-time',d:'Nada terdeteksi, frekuensi Hz, akurasi cent, dan indikator tuning ditampilkan langsung.',tip:'Visualisasi interaktif',ic:'fa-eye',cl:'accent'},
+  {t:'Review & Tingkatkan',d:'Periksa riwayat sesi, pelajari pola kesalahan, dan ikuti rekomendasi latihan AI.',tip:'Progress tracking otomatis',ic:'fa-arrow-trend-up',cl:'primary'},
+];
+
+// ============================================================
+// URL ROUTING
+// ============================================================
+const PAGES=['home','fitur','carakerja','tuner','analisis','deteksi','latihan','riwayat','pengaturan','tentang'];
+const TITLES={home:'VocalAI — AI-Powered Audio Tuner',fitur:'Fitur Lengkap — VocalAI',carakerja:'Cara Kerja — VocalAI',tuner:'Chromatic Tuner — VocalAI',analisis:'Analisis Vokal — VocalAI',deteksi:'Deteksi Nada — VocalAI',latihan:'Latihan Vokal — VocalAI',riwayat:'Riwayat Sesi — VocalAI',pengaturan:'Pengaturan — VocalAI',tentang:'Tentang — VocalAI'};
+
+function nav(page){
+  if(!PAGES.includes(page))page='home';
+  const h='#/'+page;
+  if(window.location.hash!==h)history.pushState({page:page},'',h);
+  showPage(page);
+}
+
+function showPage(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const el=document.getElementById('pg-'+page);
+  if(el){el.classList.add('active');window.scrollTo({top:0,behavior:'smooth'})}
+  document.title=TITLES[page]||'VocalAI';
+  document.querySelectorAll('#bNav .ni').forEach(i=>i.classList.toggle('active',i.dataset.p===page));
+  document.querySelectorAll('#dNav .nl').forEach(l=>{const a=l.dataset.p===page;l.classList.toggle('text-white',a);l.classList.toggle('bg-white/5',a);l.classList.toggle('text-textsec',!a)});
+  if(page==='analisis')drawPitch();
+  if(page==='deteksi'){buildPiano();buildFT();buildDN()}
+  if(page==='latihan')renderEx('beginner');
+  if(page==='riwayat')renderH('all');
+}
+
+window.addEventListener('popstate',function(e){showPage(e.state?.page||h2p())});
+function h2p(){const h=window.location.hash.replace('#/','').replace('#','');return PAGES.includes(h)?h:'home'}
+
+// ============================================================
+// UTILITAS
+// ============================================================
+function toggleMM(){document.getElementById('mMenu').classList.toggle('open');document.getElementById('hbBtn').classList.toggle('open')}
+function toast(m){const t=document.getElementById('toast');document.getElementById('toastMsg').textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+function cfClr(){document.getElementById('cMod').classList.add('open');document.getElementById('cMsg').textContent='Semua data riwayat dan pengaturan akan dihapus permanen.';document.getElementById('cY').onclick=()=>{clC();toast('Semua data berhasil dihapus')}}
+function clC(){document.getElementById('cMod').classList.remove('open')}
+
+// ============================================================
+// HERO WAVE
+// ============================================================
+function buildWave(){const c=document.getElementById('hWave');if(!c)return;c.innerHTML='';const n=window.innerWidth<640?30:60;for(let i=0;i<n;i++){const b=document.createElement('div');b.className='wb';b.style.setProperty('--h',(12+Math.random()*40)+'px');b.style.animationDelay=(i*.04)+'s';c.appendChild(b)}}
+
+// ============================================================
+// FITUR — Semua ikon Free, tidak ada yang kosong
+// ============================================================
+function buildFitur(){
+  const g=document.getElementById('fiturGrid');
+  if(!g||g.children.length>0)return;
+  FD.forEach(f=>{
+    const d=document.createElement('div');
+    d.className='sc ch';
+    d.innerHTML=`
+      <div class="w-12 h-12 rounded-xl bg-${f.c}/10 flex items-center justify-center mb-4">
+        <i class="fa-solid ${f.ic} text-${f.c} text-lg"></i>
+      </div>
+      <h3 class="font-semibold text-sm mb-2">${f.t}</h3>
+      <p class="text-textsec text-xs leading-relaxed">${f.d}</p>
+      <div class="flex flex-wrap gap-2 mt-4">
+        ${f.tags.map(t=>`<span class="text-[10px] bg-${f.c}/10 text-${f.c} px-2.5 py-1 rounded-full">${t}</span>`).join('')}
+      </div>`;
+    g.appendChild(d);
+  });
+}
+
+// ============================================================
+// STEPS — fa-shield-halved (Free) bukan fa-shield-check (Pro)
+// ============================================================
+function buildSteps(){
+  const c=document.getElementById('stepsC');
+  if(!c||c.children.length>0)return;
+  STEPS.forEach((s,i)=>{
+    const last=i===STEPS.length-1;
+    const cv=s.cl==='primary'?'primary':s.cl==='secondary'?'secondary':'accent';
+    const d=document.createElement('div');
+    d.className='flex gap-4';
+    d.innerHTML=`
+      <div class="flex flex-col items-center">
+        <div class="w-12 h-12 rounded-full bg-${cv} flex items-center justify-center text-bgdark font-bold text-sm shrink-0" ${cv==='accent'?'style="color:#0F172A"':''}>${i+1}</div>
+        ${last?'':`<div class="sl" style="background:linear-gradient(to bottom,var(--${cv}),transparent)"></div>`}
+      </div>
+      <div class="sc flex-1 mb-6">
+        <h3 class="font-semibold text-sm mb-2">${s.t}</h3>
+        <p class="text-textsec text-xs leading-relaxed">${s.d}</p>
+        <div class="flex items-center gap-2 mt-3">
+          <i class="fa-solid ${s.ic} text-${cv} text-xs"></i>
+          <span class="text-[11px] text-${cv}">${s.tip}</span>
+        </div>
+      </div>`;
+    c.appendChild(d);
+  });
+}
+
+// ============================================================
+// TUNER
+// ============================================================
+let tAct=false,aCx=null,an=null,mic=null,tId=null,wId=null;
+function toggleT(){tAct?stopT():startT()}
+async function startT(){try{mic=await navigator.mediaDevices.getUserMedia({audio:true});aCx=new(window.AudioContext||window.webkitAudioContext)();an=aCx.createAnalyser();an.fftSize=2048;aCx.createMediaStreamSource(mic).connect(an);tAct=true;document.getElementById('tTxt').textContent='Berhenti';document.getElementById('tIco').className='fa-solid fa-stop';document.getElementById('tDot').style.animation='pu 1s infinite';document.getElementById('tStat').textContent='Merekam...';document.getElementById('tPulse').style.display='block';procT();drawW();toast('Mikrofon aktif — mulai bernyanyi')}catch(e){toast('Gagal akses mikrofon. Pastikan izin diberikan.')}}
+function stopT(){tAct=false;if(mic)mic.getTracks().forEach(t=>t.stop());if(aCx)aCx.close();if(tId)cancelAnimationFrame(tId);if(wId)cancelAnimationFrame(wId);document.getElementById('tTxt').textContent='Mulai';document.getElementById('tIco').className='fa-solid fa-microphone';document.getElementById('tDot').style.animation='none';document.getElementById('tStat').textContent='Berhenti';document.getElementById('tPulse').style.display='none'}
+function resetT(){stopT();document.getElementById('tNote').textContent='--';document.getElementById('tOct').textContent='Oktave -';document.getElementById('tFreq').textContent='-- Hz';document.getElementById('tCent').textContent='0 cent';document.getElementById('tBar').style.left='calc(50% - 6px)';document.getElementById('tRing').style.background='conic-gradient(rgba(30,41,59,.8) 0deg)';document.getElementById('tStat').textContent='Siap';const cv=document.getElementById('wC');cv.getContext('2d').clearRect(0,0,cv.width,cv.height)}
+function procT(){if(!tAct||!an)return;const bl=an.fftSize,b=new Float32Array(bl);an.getFloatTimeDomainData(b);let rms=0;for(let i=0;i<bl;i++)rms+=b[i]*b[i];rms=Math.sqrt(rms/bl);if(rms>.01){const f=autoC(b,aCx.sampleRate);if(f>0){const r=f2n(f);if(r){document.getElementById('tNote').textContent=r.note;document.getElementById('tOct').textContent='Oktave '+r.octave;document.getElementById('tFreq').textContent=f.toFixed(1)+' Hz';document.getElementById('tCent').textContent=(r.cent>0?'+':'')+r.cent+' cent';document.getElementById('tBar').style.left=`calc(${50+(r.cent/50)*40}% - 6px)`;const cl=r.accuracy>=90?'#00D2C4':r.accuracy>=70?'#FFBE76':'#ef4444';document.getElementById('tRing').style.background=`conic-gradient(${cl} 0deg, ${cl} calc(${r.accuracy} * 3.6deg), rgba(30,41,59,.8) calc(${r.accuracy} * 3.6deg))`}}}tId=requestAnimationFrame(procT)}
+function autoC(b,sr){const S=b.length;let rms=0;for(let i=0;i<S;i++)rms+=b[i]*b[i];rms=Math.sqrt(rms/S);if(rms<.01)return-1;let r1=0,r2=S-1;for(let i=0;i<S/2;i++)if(Math.abs(b[i])<.2){r1=i;break}for(let i=1;i<S/2;i++)if(Math.abs(b[S-i])<.2){r2=S-i;break}const tr=b.slice(r1,r2),tl=tr.length,c=new Float32Array(tl);for(let i=0;i<tl;i++)for(let j=0;j<tl-i;j++)c[i]+=tr[j]*tr[j+i];let d=0;while(c[d]>c[d+1]&&d<tl-1)d++;let mx=-1,mp=-1;for(let i=d;i<tl;i++)if(c[i]>mx){mx=c[i];mp=i}let T0=mp;if(!T0||T0===tl-1)return-1;const x1=c[T0-1],x2=c[T0],x3=c[T0+1],a=(x1+x3-2*x2)/2,bv=(x3-x1)/2;if(a)T0=T0-bv/(2*a);return sr/T0}
+function drawW(){if(!tAct||!an)return;const cv=document.getElementById('wC'),cx=cv.getContext('2d'),w=cv.width,h=cv.height,bl=an.fftSize,d=new Float32Array(bl);an.getFloatTimeDomainData(d);cx.clearRect(0,0,w,h);cx.strokeStyle='rgba(148,163,184,.08)';cx.lineWidth=1;cx.beginPath();cx.moveTo(0,h/2);cx.lineTo(w,h/2);cx.stroke();const g=cx.createLinearGradient(0,0,w,0);g.addColorStop(0,'#00D2C4');g.addColorStop(.5,'#6C5CE7');g.addColorStop(1,'#00D2C4');cx.strokeStyle=g;cx.lineWidth=2;cx.beginPath();const sw=w/bl;for(let i=0;i<bl;i++){const y=(d[i]+1)/2*h;i===0?cx.moveTo(0,y):cx.lineTo(i*sw,y)}cx.stroke();wId=requestAnimationFrame(drawW)}
+function buildRefN(){const c=document.getElementById('refN');if(!c||c.children.length>0)return;['C','D','E','F','G','A','B',"C'"].forEach((n,i)=>{const rn=n.replace("'",""),o=i<7?4:5,f=nF(rn,o),sp=i===0||i===3||i===7,cl=sp?'text-primary':i===4||i===5?'text-secondary':'text-white';const d=document.createElement('div');d.className='bg-bgdark rounded-lg py-2';d.innerHTML=`<div class="text-sm font-bold ${cl}">${n}</div><div class="text-[10px] text-textsec">${f.toFixed(1)}</div>`;c.appendChild(d)})}
+
+// ============================================================
+// ANALISIS
+// ============================================================
+function drawPitch(){const cv=document.getElementById('pC');if(!cv)return;const cx=cv.getContext('2d'),w=cv.width,h=cv.height;cx.clearRect(0,0,w,h);cx.strokeStyle='rgba(148,163,184,.06)';cx.lineWidth=1;for(let i=0;i<5;i++){const y=i/4*h;cx.beginPath();cx.moveTo(0,y);cx.lineTo(w,y);cx.stroke()}const pts=[],mel=[261.6,293.7,329.6,349.2,392,440,493.9,523.3,493.9,440,392,349.2,329.6,293.7,261.6,293.7,329.6,392,440,523.3,493.9,440,392,329.6,261.6];mel.forEach((f,i)=>pts.push({x:i/(mel.length-1)*w,y:h-((f-200)/400)*h}));const ag=cx.createLinearGradient(0,0,0,h);ag.addColorStop(0,'rgba(0,210,196,.15)');ag.addColorStop(1,'rgba(0,210,196,0)');cx.fillStyle=ag;cx.beginPath();cx.moveTo(pts[0].x,h);pts.forEach(p=>cx.lineTo(p.x,p.y));cx.lineTo(pts[pts.length-1].x,h);cx.closePath();cx.fill();cx.strokeStyle='#00D2C4';cx.lineWidth=2.5;cx.lineJoin='round';cx.beginPath();pts.forEach((p,i)=>i===0?cx.moveTo(p.x,p.y):cx.lineTo(p.x,p.y));cx.stroke();pts.forEach(p=>{cx.fillStyle='#00D2C4';cx.beginPath();cx.arc(p.x,p.y,3,0,Math.PI*2);cx.fill()});cx.fillStyle='#94A3B8';cx.font='10px Poppins';cx.textAlign='left';['600','500','400','300','200'].forEach((l,i)=>cx.fillText(l+' Hz',4,14+i/4*h));buildDist();buildParams();buildTips()}
+function buildDist(){const c=document.getElementById('nDist');if(!c)return;c.innerHTML='';[{n:'C',p:18,c:'#00D2C4'},{n:'D',p:14,c:'#6C5CE7'},{n:'E',p:16,c:'#FFBE76'},{n:'F',p:10,c:'#FF9F43'},{n:'G',p:20,c:'#00D2C4'},{n:'A',p:12,c:'#6C5CE7'},{n:'B',p:10,c:'#FFBE76'}].forEach(d=>{const e=document.createElement('div');e.className='flex items-center gap-3';e.innerHTML=`<div class="w-8 text-xs font-bold text-center" style="color:${d.c}">${d.n}</div><div class="flex-1 h-4 bg-bgdark rounded-full overflow-hidden"><div class="h-full rounded-full pf" style="width:${d.p/20*100}%;background:${d.c}"></div></div><div class="w-10 text-right text-xs text-textsec">${d.p}%</div>`;c.appendChild(e)})}
+function buildParams(){const c=document.getElementById('pBars');if(!c)return;c.innerHTML='';[{l:'Range Vokal',v:'C3 — G5',p:72,c:'primary'},{l:'Akurasi Nada',v:'94.2%',p:94,c:'secondary'},{l:'Konsistensi',v:'88.7%',p:89,c:'accent'},{l:'Breath Control',v:'81.5%',p:82,c:'primary'}].forEach(x=>{const e=document.createElement('div');e.innerHTML=`<div class="flex justify-between text-xs mb-1"><span class="text-textsec">${x.l}</span><span>${x.v}</span></div><div class="h-1.5 bg-bgdark rounded-full"><div class="h-full bg-${x.c} rounded-full pf" style="width:${x.p}%"></div></div>`;c.appendChild(e)})}
+function buildTips(){const c=document.getElementById('aiT');if(!c)return;c.innerHTML='';[{t:'Perkuat Nada Rendah',d:'Latihan humming di register C3–E3 selama 5 menit/hari untuk resonance dada.',c:'primary'},{t:'Kurangi Vibrato Berlebih',d:'Vibrato Anda 7.2Hz — idealnya 5–6Hz. Coba long tone tanpa vibrato.',c:'secondary'},{t:'Transisi Smoother',d:'Break pada B4–C5 terdeteksi. Latihan glissando untuk memperhalus bridge.',c:'accent'}].forEach(t=>{const e=document.createElement('div');e.className='flex gap-3 items-start mb-3';e.innerHTML=`<div class="w-7 h-7 rounded-lg bg-${t.c}/10 flex items-center justify-center shrink-0 mt-0.5"><i class="fa-solid fa-lightbulb text-${t.c} text-xs"></i></div><div><div class="text-xs font-medium mb-0.5">${t.t}</div><div class="text-[11px] text-textsec leading-relaxed">${t.d}</div></div>`;c.appendChild(e)})}
+function swTb(b){b.parentElement.querySelectorAll('.tb').forEach(x=>x.classList.remove('active'));b.classList.add('active');drawPitch();toast('Data diperbarui')}
+
+// ============================================================
+// DETEKSI NADA
+// ============================================================
+function buildPiano(){const c=document.getElementById('piano');if(!c||c.children.length>0)return;c.innerHTML='';const wn=['C','D','E','F','G','A','B','C','D','E','F','G','A','B'],bm={0:'C#',1:'D#',3:'F#',4:'G#',5:'A#',7:'C#',8:'D#',10:'F#',11:'G#',12:'A#'};wn.forEach((n,i)=>{const w=document.createElement('div');w.className='relative cursor-pointer transition hover:opacity-80';w.style.cssText='width:36px;height:120px;background:linear-gradient(to bottom,#fff,#e8e8e8);border-radius:0 0 6px 6px;border:1px solid rgba(148,163,184,.3)';const o=i<7?4:5;w.innerHTML=`<div class="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-bold ${n==='C'?'text-primary':'text-gray-600'}">${n}${o}</div>`;w.onclick=()=>toast(`${n}${o} = ${nF(n,o).toFixed(1)} Hz`);c.appendChild(w);if(bm[i]!==undefined){const bk=document.createElement('div');bk.className='absolute cursor-pointer transition hover:opacity-80 z-10';bk.style.cssText=`left:${i*36+24}px;top:0;width:24px;height:75px;background:linear-gradient(to bottom,#333,#111);border-radius:0 0 4px 4px;border:1px solid rgba(0,0,0,.5)`;bk.innerHTML=`<div class="absolute bottom-2 left-1/2 -translate-x-1/2 text-[8px] text-gray-400">${bm[i]}</div>`;bk.onclick=()=>toast(`${bm[i]}${o} = ${nF(bm[i],o).toFixed(1)} Hz`);c.appendChild(bk)}})}
+function buildDN(){const c=document.getElementById('detN');if(!c||c.children.length>0)return;c.innerHTML='';['C4','E4','G4','C5','G4','E4','C4','D4'].forEach(n=>{const rn=n.slice(0,-1),col=NC[rn]||'#00D2C4';const d=document.createElement('div');d.className='flex flex-col items-center gap-1';d.innerHTML=`<div class="nb" style="background:${col}20;color:${col}">${rn}</div><span class="text-[10px] text-textsec">Okt. ${n.slice(-1)}</span>`;c.appendChild(d)})}
+function buildFT(){const t=document.getElementById('fTbl');if(!t||t.children.length>0)return;NS.forEach(n=>{const c=NC[n];const r=document.createElement('tr');r.className='border-b border-white/5 hover:bg-white/3';let h=`<td class="py-2 pr-4 font-bold" style="color:${c}">${n}</td>`;for(let o=3;o<=6;o++)h+=`<td class="py-2 px-3 text-right text-textsec font-mono">${nF(n,o).toFixed(1)}</td>`;r.innerHTML=h;t.appendChild(r)})}
+function lookupF(){const inp=document.getElementById('fIn'),res=document.getElementById('fRes'),f=parseFloat(inp.value);if(isNaN(f)||f<=0){res.className='mt-3 text-sm text-red-400';res.classList.remove('hidden');res.textContent='Masukkan frekuensi valid (contoh: 440)';return}const r=f2n(f);if(r){const c=NC[r.note]||'#00D2C4';res.className='mt-3 text-sm';res.classList.remove('hidden');res.innerHTML=`<div class="flex items-center gap-3 bg-bgdark rounded-xl p-4"><div class="nb" style="background:${c}20;color:${c}">${r.note}</div><div><div class="font-medium">Nada ${r.note}${r.octave}</div><div class="text-textsec text-xs">${f.toFixed(1)} Hz | ${r.cent>0?'+':''}${r.cent} cent | Akurasi ${r.accuracy}%</div></div></div>`}}
+document.getElementById('fIn')?.addEventListener('keydown',e=>{if(e.key==='Enter')lookupF()});
+
+// ============================================================
+// LATIHAN
+// ============================================================
+function renderEx(lv){const c=document.getElementById('exL');if(!c)return;c.innerHTML='';(EX[lv]||[]).forEach(x=>{const cv=x.cl==='primary'?'primary':x.cl==='secondary'?'secondary':'accent';const stars='★'.repeat(x.diff)+'☆'.repeat(5-x.diff);const d=document.createElement('div');d.className='sc ch';d.innerHTML=`<div class="flex items-start gap-4"><div class="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style="background:color-mix(in srgb, var(--${cv}) 15%, transparent)"><i class="fa-solid ${x.icon}" style="color:var(--${cv})"></i></div><div class="flex-1 min-w-0"><div class="flex items-start justify-between gap-2"><h3 class="font-semibold text-sm">${x.name}</h3><span class="text-[10px] text-textsec shrink-0">${x.dur}</span></div><p class="text-textsec text-xs mt-0.5">${x.desc}</p><div class="flex items-center justify-between mt-3"><span class="text-[10px] text-accent tracking-wider">${stars}</span><button onclick="toast('Memulai: ${x.name}')" class="bg-white/5 hover:bg-white/10 border border-white/10 text-xs px-4 py-1.5 rounded-lg transition font-medium">Mulai <i class="fa-solid fa-play ml-1 text-[9px]"></i></button></div></div></div>`;c.appendChild(d)});buildDaily()}
+function buildDaily(){const c=document.getElementById('dPr');if(!c)return;c.innerHTML='';[65,40,80,55,90,70,30].forEach((v,i)=>{const d=document.createElement('div');d.className='flex-1 flex flex-col items-center gap-1';d.innerHTML=`<div class="w-full ${i===4?'bg-primary':'bg-secondary/40'} rounded-t-md" style="height:${v}%"></div><span class="text-[9px] ${i===4?'text-primary font-bold':'text-textsec'}">${v}</span>`;c.appendChild(d)})}
+function swLv(b,lv){b.parentElement.querySelectorAll('.tb').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderEx(lv)}
+
+// ============================================================
+// RIWAYAT
+// ============================================================
+function renderH(f){const c=document.getElementById('hL');if(!c)return;c.innerHTML='';const d=f==='all'?HIST:HIST.filter(h=>h.type===f);if(!d.length){c.innerHTML='<div class="text-center text-textsec text-sm py-12">Tidak ada riwayat</div>';return}const ic={tuner:'fa-microphone',analisis:'fa-chart-line',latihan:'fa-dumbbell'},cl={tuner:'primary',analisis:'secondary',latihan:'accent'},lb={tuner:'Tuner',analisis:'Analisis',latihan:'Latihan'};d.forEach(h=>{const cv=cl[h.type];const e=document.createElement('div');e.className='hi sc flex items-start gap-3 cursor-pointer';e.onclick=()=>toast('Detail: '+h.title);e.innerHTML=`<div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background:color-mix(in srgb, var(--${cv}) 15%, transparent)"><i class="fa-solid ${ic[h.type]} text-sm" style="color:var(--${cv})"></i></div><div class="flex-1 min-w-0"><div class="flex items-start justify-between gap-2"><div><div class="text-xs font-semibold">${h.title}</div><div class="text-[10px] text-textsec mt-0.5">${h.date} · ${h.dur}</div></div><div class="text-right shrink-0"><div class="text-sm font-bold" style="color:var(--${cv})">${h.score}</div><div class="text-[9px] text-textsec">skor</div></div></div><div class="flex items-center justify-between mt-2"><span class="text-[10px] text-textsec">${h.detail}</span><span class="text-[9px] px-2 py-0.5 rounded-full" style="background:color-mix(in srgb, var(--${cv}) 12%, transparent);color:var(--${cv})">${lb[h.type]}</span></div></div>`;c.appendChild(e)})}
+function fH(b,f){b.parentElement.querySelectorAll('.tb').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderH(f)}
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded',()=>{
+  buildWave();
+  buildFitur();
+  buildSteps();
+  buildRefN();
+  showPage(h2p());
+  let rt;
+  window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(buildWave,300)});
+});
+</script>
+</body>
+</html>
