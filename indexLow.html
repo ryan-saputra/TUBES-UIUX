@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VocalAI — Low Fidelity Wireframe</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: { wire: ['Inter', 'sans-serif'] },
+      colors: {
+        wf: {
+          bg: '#F5F5F5',
+          card: '#FFFFFF',
+          border: '#D1D5DB',
+          line: '#9CA3AF',
+          text: '#374151',
+          muted: '#9CA3AF',
+          dark: '#1F2937',
+          fill: '#E5E7EB',
+          accent: '#6B7280',
+        }
+      }
+    }
+  }
+}
+</script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Inter', sans-serif; background: #F5F5F5; color: #374151; overflow-x: hidden; }
+
+  .page { display: none; min-height: 100vh; padding-top: 60px; }
+  .page.active { display: block; animation: pgIn .25s ease; }
+  @keyframes pgIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .lorem { height: 10px; background: #E5E7EB; border-radius: 3px; }
+  .lorem.w-full { width: 100%; }
+  .lorem.w-3-4 { width: 75%; }
+  .lorem.w-2-3 { width: 66%; }
+  .lorem.w-1-2 { width: 50%; }
+  .lorem.w-1-3 { width: 33%; }
+  .lorem.w-1-4 { width: 25%; }
+  .lorem.w-5-6 { width: 83%; }
+  .lorem.h-sm { height: 8px; }
+  .lorem.h-lg { height: 14px; }
+  .lorem.h-xl { height: 18px; }
+  .lorem.h-2xl { height: 24px; }
+
+  .img-placeholder { background: #E5E7EB; border: 1px dashed #9CA3AF; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #9CA3AF; font-size: 11px; }
+  .circle-placeholder { border-radius: 50%; background: #E5E7EB; border: 1px dashed #9CA3AF; }
+  .bar-placeholder { background: #E5E7EB; border-radius: 3px 3px 0 0; }
+
+  .wf-card { background: #fff; border: 1px solid #D1D5DB; border-radius: 8px; padding: 16px; }
+
+  .wf-btn { border: 1.5px solid #374151; border-radius: 8px; padding: 10px 24px; font-size: 12px; font-weight: 500; color: #374151; background: transparent; cursor: pointer; transition: background 0.2s; }
+  .wf-btn:hover { background: #F5F5F5; }
+  .wf-btn.filled { background: #374151; color: #fff; border-color: #374151; }
+  .wf-btn.filled:hover { background: #1F2937; }
+
+  .wf-input { border: 1.5px solid #D1D5DB; border-radius: 8px; padding: 10px 14px; font-size: 12px; width: 100%; background: #fff; color: #9CA3AF; outline: none; }
+
+  .wf-toggle { width: 40px; height: 22px; border-radius: 11px; border: 1.5px solid #9CA3AF; background: #E5E7EB; position: relative; cursor: pointer; flex-shrink: 0; transition: background 0.2s; }
+  .wf-toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #9CA3AF; transition: all 0.2s; }
+  .wf-toggle.on { background: #374151; border-color: #374151; }
+  .wf-toggle.on::after { left: 20px; background: #fff; }
+
+  .nav-mobile { position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; background: #fff; border-top: 1px solid #D1D5DB; padding: 6px 0 env(safe-area-inset-bottom, 6px); }
+  .nav-mobile .nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 9px; color: #9CA3AF; cursor: pointer; padding: 4px 0; transition: color 0.2s; }
+  .nav-mobile .nav-item.active { color: #374151; }
+  .nav-mobile .nav-item .nav-dot { width: 4px; height: 4px; border-radius: 50%; background: transparent; margin-bottom: 2px; }
+  .nav-mobile .nav-item.active .nav-dot { background: #374151; }
+
+  .nav-desktop { display: none; }
+  @media (min-width: 768px) {
+    .nav-mobile { display: none !important; }
+    .nav-desktop { display: flex; }
+    .page { padding-top: 64px; }
+  }
+
+  .hamburger span { display: block; width: 18px; height: 1.5px; background: #374151; margin: 4px 0; border-radius: 1px; transition: all 0.3s; }
+  .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(4px, 4px); }
+  .hamburger.open span:nth-child(2) { opacity: 0; }
+  .hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(4px, -4px); }
+
+  .mobile-menu-overlay { position: fixed; inset: 0; z-index: 90; background: rgba(255,255,255,0.98); transform: translateX(100%); transition: transform 0.3s; }
+  .mobile-menu-overlay.open { transform: translateX(0); }
+
+  .wf-tab { padding: 6px 14px; border-radius: 6px; font-size: 11px; color: #9CA3AF; border: 1px solid #D1D5DB; cursor: pointer; transition: all 0.2s; }
+  .wf-tab.active { background: #374151; color: #fff; border-color: #374151; }
+
+  .step-line-wf { width: 1.5px; height: 30px; background: #D1D5DB; margin: 0 auto; }
+
+  .toast-wf { position: fixed; top: 76px; right: 16px; z-index: 9999; padding: 12px 18px; border-radius: 8px; background: #fff; border: 1px solid #D1D5DB; font-size: 11px; color: #374151; max-width: 280px; transform: translateX(120%); transition: transform 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+  .toast-wf.show { transform: translateX(0); }
+
+  @media (max-width: 360px) { .wf-card { padding: 12px; } }
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+</style>
+</head>
+<body>
+
+<div id="toast" class="toast-wf"><span id="toastMsg">Notifikasi</span></div>
+
+<!-- ======== NAVBAR DESKTOP ======== -->
+<nav class="nav-desktop fixed top-0 left-0 right-0 z-50 items-center justify-between px-6 lg:px-12 py-3 bg-white border-b border-wf-border">
+  <a href="#/home" onclick="event.preventDefault();nav('home')" class="flex items-center gap-2 cursor-pointer">
+    <div class="w-7 h-7 rounded-md bg-wf-dark"></div>
+    <div class="lorem w-16 h-sm"></div>
+  </a>
+  <div class="hidden lg:flex items-center gap-1" id="desktopNav">
+    <a href="#/home" onclick="event.preventDefault();nav('home')" class="nav-link px-3 py-1.5 rounded-md text-[11px] font-medium text-wf-muted hover:text-wf-text hover:bg-wf-fill transition" data-page="home">Beranda</a>
+    <a href="#/fitur" onclick="event.preventDefault();nav('fitur')" class="nav-link px-3 py-1.5 rounded-md text-[11px] font-medium text-wf-muted hover:text-wf-text hover:bg-wf-fill transition" data-page="fitur">Fitur</a>
+    <a href="#/carakerja" onclick="event.preventDefault();nav('carakerja')" class="nav-link px-3 py-1.5 rounded-md text-[11px] font-medium text-wf-muted hover:text-wf-text hover:bg-wf-fill transition" data-page="carakerja">Cara Kerja</a>
+    <a href="#/tuner" onclick="event.preventDefault();nav('tuner')" class="nav-link px-3 py-1.5 rounded-md text-[11px] font-medium text-wf-muted hover:text-wf-text hover:bg-wf-fill transition" data-page="tuner">Tuner</a>
+    <a href="#/analisis" onclick="event.preventDefault();nav('analisis')" class="nav-link px-3 py-1.5 rounded-md text-[11px] font-medium text-wf-muted hover:text-wf-text hover:bg-wf-fill transition" data-page="analisis">Analisis</a>
+    <a href="#/deteksi" onclick="event.preventDefault();nav('deteksi')" class="nav-link px-3 py-1.5 rounded-md text-[11px] font-medium text-wf-muted hover:text-wf-text hover:bg-wf-fill transition" data-page="deteksi">Deteksi Nada</a>
+    <a href="#/latihan" onclick="event.preventDefault();nav('latihan')" class="nav-link px-3 py-1.5 rounded-md text-[11px] font-medium text-wf-muted hover:text-wf-text hover:bg-wf-fill transition" data-page="latihan">Latihan</a>
+    <a href="#/riwayat" onclick="event.preventDefault();nav('riwayat')" class="nav-link px-3 py-1.5 rounded-md text-[11px] font-medium text-wf-muted hover:text-wf-text hover:bg-wf-fill transition" data-page="riwayat">Riwayat</a>
+    <a href="#/pengaturan" onclick="event.preventDefault();nav('pengaturan')" class="nav-link px-3 py-1.5 rounded-md text-[11px] font-medium text-wf-muted hover:text-wf-text hover:bg-wf-fill transition" data-page="pengaturan">Pengaturan</a>
+    <a href="#/tentang" onclick="event.preventDefault();nav('tentang')" class="nav-link px-3 py-1.5 rounded-md text-[11px] font-medium text-wf-muted hover:text-wf-text hover:bg-wf-fill transition" data-page="tentang">Tentang</a>
+  </div>
+  <a href="#/tuner" onclick="event.preventDefault();nav('tuner')" class="hidden lg:block wf-btn filled text-[11px] py-2 px-5 cursor-pointer">Mulai</a>
+</nav>
+
+<!-- Hamburger mobile -->
+<div class="md:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3 bg-white border-b border-wf-border">
+  <a href="#/home" onclick="event.preventDefault();nav('home')" class="flex items-center gap-2 cursor-pointer">
+    <div class="w-6 h-6 rounded bg-wf-dark"></div>
+    <div class="lorem w-12 h-sm"></div>
+  </a>
+  <div class="hamburger" id="hamburgerBtn" onclick="toggleMobileMenu()"><span></span><span></span><span></span></div>
+</div>
+
+<!-- Mobile menu overlay -->
+<div class="mobile-menu-overlay md:hidden" id="mobileMenu">
+  <div class="pt-16 px-4 flex flex-col gap-1">
+    <a href="#/home" onclick="event.preventDefault();nav('home');toggleMobileMenu()" class="text-left px-3 py-2.5 rounded-lg text-wf-muted hover:bg-wf-fill text-[12px] cursor-pointer">Beranda</a>
+    <a href="#/fitur" onclick="event.preventDefault();nav('fitur');toggleMobileMenu()" class="text-left px-3 py-2.5 rounded-lg text-wf-muted hover:bg-wf-fill text-[12px] cursor-pointer">Fitur</a>
+    <a href="#/carakerja" onclick="event.preventDefault();nav('carakerja');toggleMobileMenu()" class="text-left px-3 py-2.5 rounded-lg text-wf-muted hover:bg-wf-fill text-[12px] cursor-pointer">Cara Kerja</a>
+    <a href="#/tuner" onclick="event.preventDefault();nav('tuner');toggleMobileMenu()" class="text-left px-3 py-2.5 rounded-lg text-wf-muted hover:bg-wf-fill text-[12px] cursor-pointer">Tuner</a>
+    <a href="#/analisis" onclick="event.preventDefault();nav('analisis');toggleMobileMenu()" class="text-left px-3 py-2.5 rounded-lg text-wf-muted hover:bg-wf-fill text-[12px] cursor-pointer">Analisis</a>
+    <a href="#/deteksi" onclick="event.preventDefault();nav('deteksi');toggleMobileMenu()" class="text-left px-3 py-2.5 rounded-lg text-wf-muted hover:bg-wf-fill text-[12px] cursor-pointer">Deteksi Nada</a>
+    <a href="#/latihan" onclick="event.preventDefault();nav('latihan');toggleMobileMenu()" class="text-left px-3 py-2.5 rounded-lg text-wf-muted hover:bg-wf-fill text-[12px] cursor-pointer">Latihan</a>
+    <a href="#/riwayat" onclick="event.preventDefault();nav('riwayat');toggleMobileMenu()" class="text-left px-3 py-2.5 rounded-lg text-wf-muted hover:bg-wf-fill text-[12px] cursor-pointer">Riwayat</a>
+    <a href="#/pengaturan" onclick="event.preventDefault();nav('pengaturan');toggleMobileMenu()" class="text-left px-3 py-2.5 rounded-lg text-wf-muted hover:bg-wf-fill text-[12px] cursor-pointer">Pengaturan</a>
+    <a href="#/tentang" onclick="event.preventDefault();nav('tentang');toggleMobileMenu()" class="text-left px-3 py-2.5 rounded-lg text-wf-muted hover:bg-wf-fill text-[12px] cursor-pointer">Tentang</a>
+  </div>
+</div>
+
+<!-- Bottom nav mobile -->
+<div class="nav-mobile flex justify-around items-center" id="bottomNav">
+  <div class="nav-item active" data-page="home" onclick="nav('home')"><div class="nav-dot"></div>Beranda</div>
+  <div class="nav-item" data-page="tuner" onclick="nav('tuner')"><div class="nav-dot"></div>Tuner</div>
+  <div class="nav-item" data-page="analisis" onclick="nav('analisis')"><div class="nav-dot"></div>Analisis</div>
+  <div class="nav-item" data-page="latihan" onclick="nav('latihan')"><div class="nav-dot"></div>Latihan</div>
+  <div class="nav-item" data-page="pengaturan" onclick="nav('pengaturan')"><div class="nav-dot"></div>Setting</div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- HALAMAN 1: BERANDA -->
+<!-- ============================================================ -->
+<div class="page active" id="page-home">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
+    <div class="text-center mb-12">
+      <div class="inline-flex items-center gap-2 border border-wf-border rounded-full px-4 py-1 mb-6">
+        <div class="w-1.5 h-1.5 rounded-full bg-wf-accent"></div>
+        <div class="lorem w-24 h-sm"></div>
+      </div>
+      <div class="max-w-xl mx-auto mb-6">
+        <div class="lorem w-full h-2xl mx-auto mb-2"></div>
+        <div class="lorem w-3-4 h-2xl mx-auto mb-2"></div>
+        <div class="lorem w-1-2 h-2xl mx-auto"></div>
+      </div>
+      <div class="max-w-md mx-auto mb-8 space-y-2">
+        <div class="lorem w-full h-sm"></div>
+        <div class="lorem w-5-6 h-sm"></div>
+        <div class="lorem w-2-3 h-sm"></div>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-3 justify-center">
+        <a href="#/tuner" onclick="event.preventDefault();nav('tuner')" class="wf-btn filled inline-flex items-center justify-center gap-2 cursor-pointer"><div class="w-3.5 h-3.5 rounded-sm border border-white/40"></div> Mulai Tuning</a>
+        <a href="#/fitur" onclick="event.preventDefault();nav('fitur')" class="wf-btn inline-flex items-center justify-center gap-2 cursor-pointer"><div class="w-3.5 h-3.5 rounded-sm border border-wf-dark/40"></div> Pelajari Lebih</a>
+      </div>
+    </div>
+    <div class="flex items-center justify-center gap-[3px] mb-12 h-12" id="heroWaveLo"></div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-2xl mx-auto mb-14">
+      <div class="wf-card text-center py-5"><div class="lorem w-16 h-xl mx-auto mb-2"></div><div class="lorem w-20 h-sm mx-auto"></div></div>
+      <div class="wf-card text-center py-5"><div class="lorem w-10 h-xl mx-auto mb-2"></div><div class="lorem w-20 h-sm mx-auto"></div></div>
+      <div class="wf-card text-center py-5"><div class="lorem w-12 h-xl mx-auto mb-2"></div><div class="lorem w-20 h-sm mx-auto"></div></div>
+      <div class="wf-card text-center py-5"><div class="lorem w-8 h-xl mx-auto mb-2"></div><div class="lorem w-20 h-sm mx-auto"></div></div>
+    </div>
+    <div class="text-center mb-8">
+      <div class="lorem w-48 h-lg mx-auto mb-2"></div>
+      <div class="lorem w-72 h-sm mx-auto"></div>
+    </div>
+    <div class="grid sm:grid-cols-3 gap-3 max-w-3xl mx-auto mb-14">
+      <div class="wf-card"><div class="w-10 h-10 rounded-lg bg-wf-fill mb-3"></div><div class="lorem w-24 h-sm mb-2"></div><div class="space-y-1.5"><div class="lorem w-full h-sm"></div><div class="lorem w-5-6 h-sm"></div></div></div>
+      <div class="wf-card"><div class="w-10 h-10 rounded-lg bg-wf-fill mb-3"></div><div class="lorem w-28 h-sm mb-2"></div><div class="space-y-1.5"><div class="lorem w-full h-sm"></div><div class="lorem w-3-4 h-sm"></div></div></div>
+      <div class="wf-card"><div class="w-10 h-10 rounded-lg bg-wf-fill mb-3"></div><div class="lorem w-20 h-sm mb-2"></div><div class="space-y-1.5"><div class="lorem w-full h-sm"></div><div class="lorem w-2-3 h-sm"></div></div></div>
+    </div>
+    <div class="wf-card max-w-md mx-auto text-center py-10">
+      <div class="lorem w-48 h-lg mx-auto mb-2"></div>
+      <div class="lorem w-64 h-sm mx-auto mb-5"></div>
+      <a href="#/tuner" onclick="event.preventDefault();nav('tuner')" class="wf-btn filled inline-block cursor-pointer">Coba Sekarang →</a>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- HALAMAN 2: FITUR -->
+<!-- ============================================================ -->
+<div class="page" id="page-fitur">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+    <div class="text-center mb-10">
+      <div class="inline-flex items-center gap-2 border border-wf-border rounded-full px-4 py-1 mb-4"><div class="lorem w-16 h-sm"></div></div>
+      <div class="lorem w-64 h-xl mx-auto mb-2"></div>
+      <div class="lorem w-80 h-sm mx-auto"></div>
+    </div>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3" id="fiturGrid"></div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- HALAMAN 3: CARA KERJA -->
+<!-- ============================================================ -->
+<div class="page" id="page-carakerja">
+  <div class="max-w-2xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+    <div class="text-center mb-10">
+      <div class="inline-flex items-center gap-2 border border-wf-border rounded-full px-4 py-1 mb-4"><div class="lorem w-14 h-sm"></div></div>
+      <div class="lorem w-56 h-xl mx-auto mb-2"></div>
+      <div class="lorem w-72 h-sm mx-auto"></div>
+    </div>
+    <div class="flex gap-4 mb-0"><div class="flex flex-col items-center"><div class="w-10 h-10 rounded-full bg-wf-dark text-white flex items-center justify-center text-xs font-bold shrink-0">1</div><div class="step-line-wf"></div></div><div class="wf-card flex-1 mb-5"><div class="lorem w-48 h-sm mb-2"></div><div class="space-y-1.5 mb-3"><div class="lorem w-full h-sm"></div><div class="lorem w-5-6 h-sm"></div></div><div class="flex items-center gap-2"><div class="w-4 h-4 rounded bg-wf-fill"></div><div class="lorem w-40 h-sm" style="background:#D1D5DB"></div></div></div></div>
+    <div class="flex gap-4 mb-0"><div class="flex flex-col items-center"><div class="w-10 h-10 rounded-full bg-wf-dark text-white flex items-center justify-center text-xs font-bold shrink-0">2</div><div class="step-line-wf"></div></div><div class="wf-card flex-1 mb-5"><div class="lorem w-40 h-sm mb-2"></div><div class="space-y-1.5 mb-3"><div class="lorem w-full h-sm"></div><div class="lorem w-3-4 h-sm"></div></div><div class="flex items-center gap-2"><div class="w-4 h-4 rounded bg-wf-fill"></div><div class="lorem w-36 h-sm" style="background:#D1D5DB"></div></div></div></div>
+    <div class="flex gap-4 mb-0"><div class="flex flex-col items-center"><div class="w-10 h-10 rounded-full bg-wf-dark text-white flex items-center justify-center text-xs font-bold shrink-0">3</div><div class="step-line-wf"></div></div><div class="wf-card flex-1 mb-5"><div class="lorem w-44 h-sm mb-2"></div><div class="space-y-1.5 mb-3"><div class="lorem w-full h-sm"></div><div class="lorem w-2-3 h-sm"></div></div><div class="flex items-center gap-2"><div class="w-4 h-4 rounded bg-wf-fill"></div><div class="lorem w-44 h-sm" style="background:#D1D5DB"></div></div></div></div>
+    <div class="flex gap-4"><div class="flex flex-col items-center"><div class="w-10 h-10 rounded-full bg-wf-dark text-white flex items-center justify-center text-xs font-bold shrink-0">4</div></div><div class="wf-card flex-1"><div class="lorem w-36 h-sm mb-2"></div><div class="space-y-1.5 mb-3"><div class="lorem w-full h-sm"></div><div class="lorem w-5-6 h-sm"></div></div><div class="flex items-center gap-2"><div class="w-4 h-4 rounded bg-wf-fill"></div><div class="lorem w-48 h-sm" style="background:#D1D5DB"></div></div></div></div>
+    <div class="text-center mt-10"><a href="#/tuner" onclick="event.preventDefault();nav('tuner')" class="wf-btn filled inline-block cursor-pointer">Mulai Langkah Pertama →</a></div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- HALAMAN 4: TUNER -->
+<!-- ============================================================ -->
+<div class="page" id="page-tuner">
+  <div class="max-w-lg mx-auto px-4 sm:px-6 py-10 sm:py-14">
+    <div class="text-center mb-8"><div class="lorem w-40 h-xl mx-auto mb-2"></div><div class="lorem w-56 h-sm mx-auto"></div></div>
+    <div class="flex justify-center mb-6"><div class="circle-placeholder" style="width:200px;height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="lorem w-8 h-sm mb-1"></div><div class="lorem w-12 h-2xl mb-1"></div><div class="lorem w-10 h-sm mb-1"></div><div class="lorem w-16 h-sm"></div></div></div>
+    <div class="wf-card mb-4">
+      <div class="flex justify-between mb-2"><div class="lorem w-12 h-sm"></div><div class="lorem w-16 h-sm"></div></div>
+      <div class="relative h-2.5 bg-wf-fill rounded-full"><div class="absolute inset-y-0 left-1/2 w-0.5 bg-wf-line"></div><div class="absolute top-0 h-full w-2.5 bg-wf-dark rounded-full" style="left:calc(50% - 5px)"></div></div>
+      <div class="flex justify-between mt-1.5"><div class="lorem w-6 h-sm" style="height:6px"></div><div class="lorem w-16 h-sm" style="height:6px"></div><div class="lorem w-6 h-sm" style="height:6px"></div></div>
+    </div>
+    <div class="wf-card mb-4">
+      <div class="flex justify-between mb-2"><div class="lorem w-16 h-sm"></div><div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-wf-accent"></div><div class="lorem w-8 h-sm" style="height:6px"></div></div></div>
+      <div class="img-placeholder w-full" style="height:70px;border-style:solid;border-color:#D1D5DB">[ waveform ]</div>
+    </div>
+    <div class="flex gap-3 justify-center mb-8"><div class="wf-btn filled inline-flex items-center gap-2"><div class="w-3.5 h-3.5 rounded-full border border-white/40"></div> Mulai</div><div class="wf-btn"><div class="w-3.5 h-3.5 rounded border border-wf-dark/40" style="border-width:1.5px"></div></div></div>
+    <div class="wf-card"><div class="lorem w-24 h-sm mb-3"></div><div class="grid grid-cols-4 sm:grid-cols-8 gap-2"><div class="bg-wf-fill rounded-md py-2 text-center"><div class="lorem w-4 h-sm mx-auto mb-1"></div><div class="lorem w-8 h-sm mx-auto" style="height:6px"></div></div><div class="bg-wf-fill rounded-md py-2 text-center"><div class="lorem w-4 h-sm mx-auto mb-1"></div><div class="lorem w-8 h-sm mx-auto" style="height:6px"></div></div><div class="bg-wf-fill rounded-md py-2 text-center"><div class="lorem w-4 h-sm mx-auto mb-1"></div><div class="lorem w-8 h-sm mx-auto" style="height:6px"></div></div><div class="bg-wf-fill rounded-md py-2 text-center"><div class="lorem w-4 h-sm mx-auto mb-1"></div><div class="lorem w-8 h-sm mx-auto" style="height:6px"></div></div><div class="bg-wf-fill rounded-md py-2 text-center"><div class="lorem w-4 h-sm mx-auto mb-1"></div><div class="lorem w-8 h-sm mx-auto" style="height:6px"></div></div><div class="bg-wf-fill rounded-md py-2 text-center"><div class="lorem w-4 h-sm mx-auto mb-1"></div><div class="lorem w-8 h-sm mx-auto" style="height:6px"></div></div><div class="bg-wf-fill rounded-md py-2 text-center"><div class="lorem w-4 h-sm mx-auto mb-1"></div><div class="lorem w-8 h-sm mx-auto" style="height:6px"></div></div><div class="bg-wf-fill rounded-md py-2 text-center"><div class="lorem w-6 h-sm mx-auto mb-1"></div><div class="lorem w-8 h-sm mx-auto" style="height:6px"></div></div></div><div class="lorem w-64 h-sm mx-auto mt-3" style="height:6px"></div></div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- HALAMAN 5: ANALISIS -->
+<!-- ============================================================ -->
+<div class="page" id="page-analisis">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+    <div class="text-center mb-8"><div class="lorem w-48 h-xl mx-auto mb-2"></div><div class="lorem w-64 h-sm mx-auto"></div></div>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5"><div class="wf-card text-center py-4"><div class="lorem w-8 h-sm mb-1"></div><div class="lorem w-14 h-lg mx-auto"></div></div><div class="wf-card text-center py-4"><div class="lorem w-16 h-sm mb-1"></div><div class="lorem w-14 h-lg mx-auto"></div></div><div class="wf-card text-center py-4"><div class="lorem w-10 h-sm mb-1"></div><div class="lorem w-14 h-lg mx-auto"></div></div><div class="wf-card text-center py-4"><div class="lorem w-12 h-sm mb-1"></div><div class="lorem w-14 h-lg mx-auto"></div></div></div>
+    <div class="wf-card mb-4"><div class="flex justify-between items-center mb-3"><div class="lorem w-24 h-sm"></div><div class="flex gap-1"><div class="wf-tab active" style="padding:4px 10px;font-size:10px">Pitch</div><div class="wf-tab" style="padding:4px 10px;font-size:10px">Volume</div></div></div><div class="img-placeholder w-full" style="height:160px">[ pitch contour chart ]</div></div>
+    <div class="wf-card mb-4"><div class="lorem w-28 h-sm mb-4"></div><div class="space-y-3" id="lofiDistBars"></div></div>
+    <div class="grid sm:grid-cols-2 gap-3">
+      <div class="wf-card"><div class="lorem w-28 h-sm mb-4"></div><div class="space-y-4"><div><div class="flex justify-between mb-1"><div class="lorem w-20 h-sm" style="height:6px"></div><div class="lorem w-12 h-sm" style="height:6px"></div></div><div class="h-2 bg-wf-fill rounded-full"><div class="h-full bg-wf-dark rounded-full" style="width:72%"></div></div></div><div><div class="flex justify-between mb-1"><div class="lorem w-20 h-sm" style="height:6px"></div><div class="lorem w-12 h-sm" style="height:6px"></div></div><div class="h-2 bg-wf-fill rounded-full"><div class="h-full bg-wf-dark rounded-full" style="width:94%"></div></div></div><div><div class="flex justify-between mb-1"><div class="lorem w-16 h-sm" style="height:6px"></div><div class="lorem w-12 h-sm" style="height:6px"></div></div><div class="h-2 bg-wf-fill rounded-full"><div class="h-full bg-wf-dark rounded-full" style="width:89%"></div></div></div><div><div class="flex justify-between mb-1"><div class="lorem w-24 h-sm" style="height:6px"></div><div class="lorem w-12 h-sm" style="height:6px"></div></div><div class="h-2 bg-wf-fill rounded-full"><div class="h-full bg-wf-dark rounded-full" style="width:82%"></div></div></div></div></div>
+      <div class="wf-card"><div class="lorem w-16 h-sm mb-4"></div><div class="space-y-4"><div class="flex gap-3 items-start"><div class="w-6 h-6 rounded bg-wf-fill shrink-0 mt-0.5"></div><div><div class="lorem w-32 h-sm mb-1"></div><div class="lorem w-full h-sm" style="height:6px"></div></div></div><div class="flex gap-3 items-start"><div class="w-6 h-6 rounded bg-wf-fill shrink-0 mt-0.5"></div><div><div class="lorem w-36 h-sm mb-1"></div><div class="lorem w-5-6 h-sm" style="height:6px"></div></div></div><div class="flex gap-3 items-start"><div class="w-6 h-6 rounded bg-wf-fill shrink-0 mt-0.5"></div><div><div class="lorem w-28 h-sm mb-1"></div><div class="lorem w-3-4 h-sm" style="height:6px"></div></div></div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- HALAMAN 6: DETEKSI NADA -->
+<!-- ============================================================ -->
+<div class="page" id="page-deteksi">
+  <div class="max-w-2xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+    <div class="text-center mb-8"><div class="lorem w-40 h-xl mx-auto mb-2"></div><div class="lorem w-56 h-sm mx-auto"></div></div>
+    <div class="wf-card mb-4 overflow-x-auto"><div class="lorem w-32 h-sm mb-3"></div><div class="img-placeholder w-full" style="height:100px;min-width:300px">[ piano keyboard visual ]</div></div>
+    <div class="wf-card mb-4"><div class="lorem w-28 h-sm mb-3"></div><div class="grid grid-cols-4 sm:grid-cols-8 gap-2" id="lofiDetected"></div></div>
+    <div class="wf-card mb-4"><div class="lorem w-28 h-sm mb-3"></div><div class="overflow-x-auto"><div class="img-placeholder w-full" style="height:200px;min-width:320px">[ tabel frekuensi 12 nada × 4 oktave ]</div></div></div>
+    <div class="wf-card"><div class="lorem w-40 h-sm mb-3"></div><div class="flex gap-2"><input type="number" placeholder="Masukkan frekuensi Hz..." class="wf-input"><button onclick="showToast('Fitur pencarian — wireframe')" class="wf-btn filled shrink-0">Cari</button></div><div class="img-placeholder w-full mt-3" style="height:56px;border-style:dashed">[ hasil pencarian nada ]</div></div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- HALAMAN 7: LATIHAN -->
+<!-- ============================================================ -->
+<div class="page" id="page-latihan">
+  <div class="max-w-2xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+    <div class="text-center mb-8"><div class="lorem w-40 h-xl mx-auto mb-2"></div><div class="lorem w-56 h-sm mx-auto"></div></div>
+    <div class="flex gap-2 justify-center mb-8"><div class="wf-tab active">Pemula</div><div class="wf-tab">Menengah</div><div class="wf-tab">Lanjut</div></div>
+    <div class="space-y-3 mb-8" id="lofiExercises"></div>
+    <div class="wf-card"><div class="lorem w-24 h-sm mb-4"></div><div class="flex items-end justify-between gap-2 h-20 mb-2" id="lofiDaily"></div><div class="flex justify-between"><div class="lorem w-4 h-sm" style="height:5px"></div><div class="lorem w-4 h-sm" style="height:5px"></div><div class="lorem w-4 h-sm" style="height:5px"></div><div class="lorem w-4 h-sm" style="height:5px"></div><div class="lorem w-4 h-sm" style="height:5px"></div><div class="lorem w-4 h-sm" style="height:5px"></div><div class="lorem w-4 h-sm" style="height:5px"></div></div></div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- HALAMAN 8: RIWAYAT -->
+<!-- ============================================================ -->
+<div class="page" id="page-riwayat">
+  <div class="max-w-2xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+    <div class="text-center mb-8"><div class="lorem w-36 h-xl mx-auto mb-2"></div><div class="lorem w-56 h-sm mx-auto"></div></div>
+    <div class="flex gap-2 mb-6 overflow-x-auto"><div class="wf-tab active">Semua</div><div class="wf-tab">Tuner</div><div class="wf-tab">Analisis</div><div class="wf-tab">Latihan</div></div>
+    <div class="grid grid-cols-3 gap-3 mb-6"><div class="wf-card text-center py-4"><div class="lorem w-8 h-lg mx-auto mb-1"></div><div class="lorem w-16 h-sm mx-auto" style="height:6px"></div></div><div class="wf-card text-center py-4"><div class="lorem w-16 h-lg mx-auto mb-1"></div><div class="lorem w-20 h-sm mx-auto" style="height:6px"></div></div><div class="wf-card text-center py-4"><div class="lorem w-10 h-lg mx-auto mb-1"></div><div class="lorem w-20 h-sm mx-auto" style="height:6px"></div></div></div>
+    <div class="space-y-2" id="lofiHistory"></div>
+    <div class="text-center mt-6"><div class="wf-btn inline-block cursor-pointer">Muat Lebih Banyak</div></div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- HALAMAN 9: PENGATURAN -->
+<!-- ============================================================ -->
+<div class="page" id="page-pengaturan">
+  <div class="max-w-lg mx-auto px-4 sm:px-6 py-10 sm:py-14">
+    <div class="text-center mb-8"><div class="lorem w-36 h-xl mx-auto mb-2"></div><div class="lorem w-64 h-sm mx-auto"></div></div>
+    <div class="wf-card mb-3"><div class="lorem w-28 h-sm mb-4"></div><div class="space-y-5"><div><div class="flex justify-between mb-2"><div class="lorem w-20 h-sm" style="height:6px"></div><div class="lorem w-12 h-sm" style="height:6px"></div></div><div class="h-1.5 bg-wf-fill rounded-full"><div class="h-full bg-wf-dark rounded-full" style="width:50%"></div></div></div><div><div class="flex justify-between mb-2"><div class="lorem w-28 h-sm" style="height:6px"></div><div class="lorem w-8 h-sm" style="height:6px"></div></div><div class="h-1.5 bg-wf-fill rounded-full"><div class="h-full bg-wf-dark rounded-full" style="width:75%"></div></div></div><div><div class="flex justify-between mb-2"><div class="lorem w-20 h-sm" style="height:6px"></div><div class="lorem w-10 h-sm" style="height:6px"></div></div><div class="h-1.5 bg-wf-fill rounded-full"><div class="h-full bg-wf-dark rounded-full" style="width:30%"></div></div></div></div></div>
+    <div class="wf-card mb-3"><div class="lorem w-16 h-sm mb-4"></div><div class="space-y-4"><div class="flex items-center justify-between"><div><div class="lorem w-20 h-sm mb-1"></div><div class="lorem w-48 h-sm" style="height:6px"></div></div><div class="wf-toggle on" onclick="this.classList.toggle('on')"></div></div><div class="flex items-center justify-between"><div><div class="lorem w-14 h-sm mb-1"></div><div class="lorem w-40 h-sm" style="height:6px"></div></div><div class="wf-toggle on" onclick="this.classList.toggle('on')"></div></div><div class="flex items-center justify-between"><div><div class="lorem w-28 h-sm mb-1"></div><div class="lorem w-44 h-sm" style="height:6px"></div></div><div class="wf-toggle on" onclick="this.classList.toggle('on')"></div></div></div></div>
+    <div class="wf-card mb-3"><div class="lorem w-20 h-sm mb-4"></div><div class="space-y-4"><div class="flex items-center justify-between"><div><div class="lorem w-28 h-sm mb-1"></div><div class="lorem w-36 h-sm" style="height:6px"></div></div><div class="wf-toggle" onclick="this.classList.toggle('on');showToast('Toggle updated')"></div></div><div class="flex items-center justify-between"><div><div class="lorem w-24 h-sm mb-1"></div><div class="lorem w-44 h-sm" style="height:6px"></div></div><div class="wf-toggle on" onclick="this.classList.toggle('on')"></div></div></div></div>
+    <div class="wf-card mb-3"><div class="lorem w-28 h-sm mb-3"></div><div class="space-y-2"><div class="flex items-center justify-between px-3 py-2.5 bg-wf-fill rounded-lg cursor-pointer hover:bg-gray-200 transition"><div class="flex items-center gap-2"><div class="w-4 h-4 rounded bg-wf-border"></div><div class="lorem w-32 h-sm" style="height:6px"></div></div><div class="lorem w-3 h-sm" style="height:6px;background:#9CA3AF"></div></div><div class="flex items-center justify-between px-3 py-2.5 bg-wf-fill rounded-lg cursor-pointer hover:bg-gray-200 transition"><div class="flex items-center gap-2"><div class="w-4 h-4 rounded bg-wf-border"></div><div class="lorem w-36 h-sm" style="height:6px"></div></div><div class="lorem w-3 h-sm" style="height:6px;background:#9CA3AF"></div></div><div class="flex items-center justify-between px-3 py-2.5 bg-wf-fill rounded-lg cursor-pointer hover:bg-gray-200 transition"><div class="flex items-center gap-2"><div class="w-4 h-4 rounded bg-wf-border"></div><div class="lorem w-28 h-sm" style="height:6px;background:#D1D5DB"></div></div><div class="lorem w-3 h-sm" style="height:6px;background:#9CA3AF"></div></div></div></div>
+    <div class="text-center text-[10px] text-wf-muted mt-6"><div class="lorem w-32 h-sm mx-auto mb-1" style="height:5px"></div><div class="lorem w-48 h-sm mx-auto" style="height:5px"></div></div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- HALAMAN 10: TENTANG -->
+<!-- ============================================================ -->
+<div class="page" id="page-tentang">
+  <div class="max-w-2xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+    <div class="text-center mb-10"><div class="w-16 h-16 rounded-2xl bg-wf-fill mx-auto mb-4 flex items-center justify-center"><div class="w-6 h-6 rounded bg-wf-dark"></div></div><div class="lorem w-48 h-xl mx-auto mb-2"></div><div class="lorem w-64 h-sm mx-auto"></div></div>
+    <div class="wf-card mb-3"><div class="lorem w-28 h-sm mb-3"></div><div class="space-y-0"><div class="flex justify-between py-2 border-b border-wf-border"><div class="lorem w-20 h-sm" style="height:6px"></div><div class="lorem w-32 h-sm" style="height:6px"></div></div><div class="flex justify-between py-2 border-b border-wf-border"><div class="lorem w-12 h-sm" style="height:6px"></div><div class="lorem w-12 h-sm" style="height:6px"></div></div><div class="flex justify-between py-2 border-b border-wf-border"><div class="lorem w-14 h-sm" style="height:6px"></div><div class="lorem w-48 h-sm" style="height:6px"></div></div><div class="flex justify-between py-2 border-b border-wf-border"><div class="lorem w-16 h-sm" style="height:6px"></div><div class="lorem w-44 h-sm" style="height:6px"></div></div><div class="flex justify-between py-2"><div class="lorem w-10 h-sm" style="height:6px"></div><div class="lorem w-20 h-sm" style="height:6px"></div></div></div></div>
+    <div class="wf-card mb-3"><div class="lorem w-20 h-sm mb-3"></div><div class="flex items-center gap-3"><div class="w-12 h-12 rounded-xl bg-wf-fill shrink-0"></div><div><div class="lorem w-40 h-sm mb-1"></div><div class="lorem w-36 h-sm mb-0.5" style="height:6px"></div><div class="lorem w-40 h-sm" style="height:6px"></div></div></div></div>
+    <div class="wf-card mb-3"><div class="lorem w-28 h-sm mb-4"></div><div class="space-y-4"><div class="flex gap-3 items-start"><div class="w-7 h-7 rounded-lg bg-wf-fill shrink-0"></div><div><div class="lorem w-28 h-sm mb-1"></div><div class="lorem w-full h-sm" style="height:6px"></div><div class="lorem w-5-6 h-sm mt-1" style="height:6px"></div></div></div><div class="flex gap-3 items-start"><div class="w-7 h-7 rounded-lg bg-wf-fill shrink-0"></div><div><div class="lorem w-32 h-sm mb-1"></div><div class="lorem w-full h-sm" style="height:6px"></div><div class="lorem w-3-4 h-sm mt-1" style="height:6px"></div></div></div><div class="flex gap-3 items-start"><div class="w-7 h-7 rounded-lg bg-wf-fill shrink-0"></div><div><div class="lorem w-20 h-sm mb-1"></div><div class="lorem w-full h-sm" style="height:6px"></div><div class="lorem w-2-3 h-sm mt-1" style="height:6px"></div></div></div><div class="flex gap-3 items-start"><div class="w-7 h-7 rounded-lg bg-wf-fill shrink-0"></div><div><div class="lorem w-36 h-sm mb-1"></div><div class="lorem w-full h-sm" style="height:6px"></div><div class="lorem w-5-6 h-sm mt-1" style="height:6px"></div></div></div></div></div>
+    <div class="wf-card mb-3"><div class="lorem w-36 h-sm mb-3"></div><div class="grid grid-cols-3 sm:grid-cols-6 gap-2"><div class="bg-wf-fill rounded-lg p-3 text-center"><div class="w-6 h-6 rounded bg-wf-border mx-auto mb-1"></div><div class="lorem w-10 h-sm mx-auto" style="height:5px"></div></div><div class="bg-wf-fill rounded-lg p-3 text-center"><div class="w-6 h-6 rounded bg-wf-border mx-auto mb-1"></div><div class="lorem w-14 h-sm mx-auto" style="height:5px"></div></div><div class="bg-wf-fill rounded-lg p-3 text-center"><div class="w-6 h-6 rounded bg-wf-border mx-auto mb-1"></div><div class="lorem w-16 h-sm mx-auto" style="height:5px"></div></div><div class="bg-wf-fill rounded-lg p-3 text-center"><div class="w-6 h-6 rounded bg-wf-border mx-auto mb-1"></div><div class="lorem w-14 h-sm mx-auto" style="height:5px"></div></div><div class="bg-wf-fill rounded-lg p-3 text-center"><div class="w-6 h-6 rounded bg-wf-border mx-auto mb-1"></div><div class="lorem w-12 h-sm mx-auto" style="height:5px"></div></div><div class="bg-wf-fill rounded-lg p-3 text-center"><div class="w-6 h-6 rounded bg-wf-border mx-auto mb-1"></div><div class="lorem w-14 h-sm mx-auto" style="height:5px"></div></div></div></div>
+    <div class="wf-card"><div class="lorem w-32 h-sm mb-3"></div><div class="space-y-2"><div class="flex items-center gap-3 px-3 py-2.5 bg-wf-fill rounded-lg"><div class="w-4 h-4 rounded bg-wf-border"></div><div class="lorem w-48 h-sm" style="height:6px"></div></div><div class="flex items-center gap-3 px-3 py-2.5 bg-wf-fill rounded-lg"><div class="w-4 h-4 rounded bg-wf-border"></div><div class="lorem w-40 h-sm" style="height:6px"></div></div><div class="flex items-center gap-3 px-3 py-2.5 bg-wf-fill rounded-lg"><div class="w-4 h-4 rounded bg-wf-border"></div><div class="lorem w-44 h-sm" style="height:6px"></div></div></div></div>
+  </div>
+</div>
+
+
+<script>
+// ============================================================
+// URL ROUTING — Ditambahkan ke kode Lo-Fi asli
+// ============================================================
+
+// Daftar semua halaman valid
+var PAGES = ['home','fitur','carakerja','tuner','analisis','deteksi','latihan','riwayat','pengaturan','tentang'];
+
+// Judul tab browser per halaman
+var TITLES = {
+  home: 'Beranda — VocalAI Wireframe',
+  fitur: 'Fitur — VocalAI Wireframe',
+  carakerja: 'Cara Kerja — VocalAI Wireframe',
+  tuner: 'Tuner — VocalAI Wireframe',
+  analisis: 'Analisis — VocalAI Wireframe',
+  deteksi: 'Deteksi Nada — VocalAI Wireframe',
+  latihan: 'Latihan — VocalAI Wireframe',
+  riwayat: 'Riwayat — VocalAI Wireframe',
+  pengaturan: 'Pengaturan — VocalAI Wireframe',
+  tentang: 'Tentang — VocalAI Wireframe'
+};
+
+// Fungsi navigasi utama — UBAH URL + tampilkan halaman
+function nav(page) {
+  if (PAGES.indexOf(page) === -1) page = 'home';
+
+  // Ubah URL di address bar (tanpa reload halaman)
+  var newHash = '#/' + page;
+  if (window.location.hash !== newHash) {
+    history.pushState({ page: page }, '', newHash);
+  }
+
+  // Tampilkan halaman
+  showPage(page);
+}
+
+// Tampilkan halaman saja (tanpa ubah URL, dipakai oleh popstate)
+function showPage(page) {
+  // Sembunyikan semua, tampilkan yang dipilih
+  var pages = document.querySelectorAll('.page');
+  for (var i = 0; i < pages.length; i++) {
+    pages[i].classList.remove('active');
+  }
+  var target = document.getElementById('page-' + page);
+  if (target) {
+    target.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Update judul tab browser
+  document.title = TITLES[page] || 'VocalAI Wireframe';
+
+  // Update bottom nav
+  var items = document.querySelectorAll('#bottomNav .nav-item');
+  for (var i = 0; i < items.length; i++) {
+    if (items[i].getAttribute('data-page') === page) {
+      items[i].classList.add('active');
+    } else {
+      items[i].classList.remove('active');
+    }
+  }
+
+  // Update desktop nav highlight
+  var links = document.querySelectorAll('#desktopNav .nav-link');
+  for (var i = 0; i < links.length; i++) {
+    if (links[i].getAttribute('data-page') === page) {
+      links[i].style.color = '#374151';
+      links[i].style.background = '#E5E7EB';
+    } else {
+      links[i].style.color = '';
+      links[i].style.background = '';
+    }
+  }
+}
+
+// Baca hash dari URL → nama halaman
+function hashToPage() {
+  var h = window.location.hash.replace('#/', '').replace('#', '');
+  return PAGES.indexOf(h) !== -1 ? h : 'home';
+}
+
+// Handle tombol Back/Forward browser
+window.addEventListener('popstate', function(e) {
+  var page = (e.state && e.state.page) ? e.state.page : hashToPage();
+  showPage(page);
+});
+
+// ============================================================
+// UTILITAS (dari kode asli, dipertahankan)
+// ============================================================
+
+function toggleMobileMenu() {
+  document.getElementById('mobileMenu').classList.toggle('open');
+  document.getElementById('hamburgerBtn').classList.toggle('open');
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2500);
+}
+
+// ============================================================
+// ISI KONTEN LO-FI (dari kode asli, dipertahankan)
+// ============================================================
+document.addEventListener('DOMContentLoaded', function() {
+
+  // Baca URL saat pertama kali load
+  showPage(hashToPage());
+
+  // Hero wave bars
+  var waveContainer = document.getElementById('heroWaveLo');
+  if (waveContainer) {
+    var count = window.innerWidth < 640 ? 30 : 50;
+    for (var i = 0; i < count; i++) {
+      var bar = document.createElement('div');
+      var h = 6 + Math.random() * 30;
+      bar.style.cssText = 'width:3px;height:' + h + 'px;background:#D1D5DB;border-radius:2px;flex-shrink:0';
+      waveContainer.appendChild(bar);
+    }
+  }
+
+  // Fitur cards
+  var fiturGrid = document.getElementById('fiturGrid');
+  if (fiturGrid) {
+    var widths = [24, 28, 20, 32, 24, 20, 28, 16, 28];
+    var descWidths = ['full','5-6','full','3-4','full','2-3','5-6','full','3-4'];
+    for (var i = 0; i < 9; i++) {
+      var card = document.createElement('div');
+      card.className = 'wf-card';
+      card.innerHTML = '<div class="w-10 h-10 rounded-lg bg-wf-fill mb-3"></div>' +
+        '<div class="lorem w-' + widths[i] + ' h-sm mb-2"></div>' +
+        '<div class="space-y-1.5"><div class="lorem w-' + descWidths[i] + ' h-sm"></div>' +
+        '<div class="lorem w-' + descWidths[i] + ' h-sm"></div></div>' +
+        '<div class="flex gap-1.5 mt-3"><div class="lorem w-12 h-sm" style="height:5px;background:#D1D5DB;border-radius:99px"></div>' +
+        '<div class="lorem w-8 h-sm" style="height:5px;background:#D1D5DB;border-radius:99px"></div></div>';
+      fiturGrid.appendChild(card);
+    }
+  }
+
+  // Distribusi nada bars
+  var distContainer = document.getElementById('lofiDistBars');
+  if (distContainer) {
+    var notes = ['C','D','E','F','G','A','B'];
+    var pcts = [72, 56, 64, 40, 80, 48, 40];
+    var vals = [18,14,16,10,20,12,10];
+    for (var i = 0; i < notes.length; i++) {
+      var row = document.createElement('div');
+      row.className = 'flex items-center gap-3';
+      row.innerHTML = '<div class="w-6 text-center text-[11px] font-bold text-wf-muted">' + notes[i] + '</div>' +
+        '<div class="flex-1 h-3 bg-wf-fill rounded-full"><div class="h-full bg-wf-dark rounded-full" style="width:' + pcts[i] + '%"></div></div>' +
+        '<div class="w-8 text-right text-[10px] text-wf-muted">' + vals[i] + '%</div>';
+      distContainer.appendChild(row);
+    }
+  }
+
+  // Detected notes
+  var detectedContainer = document.getElementById('lofiDetected');
+  if (detectedContainer) {
+    var det = ['C4','E4','G4','C5','G4','E4','C4','D4'];
+    for (var i = 0; i < det.length; i++) {
+      var n = document.createElement('div');
+      n.className = 'flex flex-col items-center gap-1';
+      n.innerHTML = '<div class="w-10 h-10 rounded-lg bg-wf-fill flex items-center justify-center text-[12px] font-bold text-wf-muted">' + det[i].slice(0,-1) + '</div>' +
+        '<div class="lorem w-6 h-sm" style="height:5px"></div>';
+      detectedContainer.appendChild(n);
+    }
+  }
+
+  // Exercise cards
+  var exContainer = document.getElementById('lofiExercises');
+  if (exContainer) {
+    var exercises = [
+      {w:32, d:'full', dur:20},
+      {w:24, d:'5-6', dur:16},
+      {w:20, d:'full', dur:20},
+      {w:28, d:'3-4', dur:16}
+    ];
+    for (var i = 0; i < exercises.length; i++) {
+      var ex = exercises[i];
+      var card = document.createElement('div');
+      card.className = 'wf-card';
+      card.innerHTML = '<div class="flex items-start gap-3"><div class="w-10 h-10 rounded-lg bg-wf-fill shrink-0"></div>' +
+        '<div class="flex-1 min-w-0"><div class="flex justify-between mb-1">' +
+        '<div class="lorem w-' + ex.w + ' h-sm"></div>' +
+        '<div class="lorem w-' + ex.dur + ' h-sm shrink-0" style="height:6px"></div></div>' +
+        '<div class="lorem w-' + ex.d + ' h-sm mb-3" style="height:6px"></div>' +
+        '<div class="flex justify-between items-center"><div class="lorem w-20 h-sm" style="height:5px;background:#D1D5DB"></div>' +
+        '<div class="wf-btn text-[10px] py-1 px-3 cursor-pointer">Mulai →</div></div></div></div>';
+      exContainer.appendChild(card);
+    }
+  }
+
+  // Daily progress
+  var dailyContainer = document.getElementById('lofiDaily');
+  if (dailyContainer) {
+    var vals = [65, 40, 80, 55, 90, 70, 30];
+    for (var i = 0; i < vals.length; i++) {
+      var bar = document.createElement('div');
+      bar.className = 'flex-1';
+      bar.innerHTML = '<div class="bar-placeholder" style="height:' + vals[i] + '%"></div>';
+      dailyContainer.appendChild(bar);
+    }
+  }
+
+  // History list
+  var histContainer = document.getElementById('lofiHistory');
+  if (histContainer) {
+    var types = [
+      {tw:12, pw:40, sw:28},
+      {tw:16, pw:36, sw:32},
+      {tw:14, pw:32, sw:20},
+      {tw:12, pw:40, sw:28},
+      {tw:16, pw:36, sw:24},
+      {tw:16, pw:40, sw:20},
+      {tw:12, pw:40, sw:32},
+      {tw:14, pw:20, sw:28}
+    ];
+    for (var i = 0; i < types.length; i++) {
+      var t = types[i];
+      var item = document.createElement('div');
+      item.className = 'wf-card flex items-start gap-3 cursor-pointer';
+      item.onclick = function() { showToast('Detail sesi — wireframe'); };
+      item.innerHTML = '<div class="w-9 h-9 rounded-lg bg-wf-fill shrink-0"></div>' +
+        '<div class="flex-1 min-w-0"><div class="flex justify-between mb-1">' +
+        '<div class="lorem w-' + t.pw + ' h-sm"></div>' +
+        '<div class="lorem w-6 h-sm shrink-0"></div></div>' +
+        '<div class="lorem w-48 h-sm mb-1.5" style="height:6px"></div>' +
+        '<div class="flex justify-between"><div class="lorem w-36 h-sm" style="height:5px"></div>' +
+        '<div class="lorem w-' + t.tw + ' h-sm shrink-0" style="height:5px;background:#D1D5DB;border-radius:99px"></div></div></div>';
+      histContainer.appendChild(item);
+    }
+  }
+
+  // Resize handler untuk wave
+  var resizeTimer;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function() {
+      var wc = document.getElementById('heroWaveLo');
+      if (wc) {
+        wc.innerHTML = '';
+        var count = window.innerWidth < 640 ? 30 : 50;
+        for (var i = 0; i < count; i++) {
+          var bar = document.createElement('div');
+          bar.style.cssText = 'width:3px;height:' + (6 + Math.random() * 30) + 'px;background:#D1D5DB;border-radius:2px;flex-shrink:0';
+          wc.appendChild(bar);
+        }
+      }
+    }, 300);
+  });
+});
+</script>
+</body>
+</html>
